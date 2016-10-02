@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Configuration
+title: Configuration (Pre 0.6.0)
 order: 3
 ---
 
