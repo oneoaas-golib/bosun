@@ -168,13 +168,30 @@ Dictionary of rule data (TODO: Document the object properly). Current values don
 
 Executes the given expression and returns the first result with identical tags to the alert instance. In other words, it evaluates the alert within the context of the alert.
 
+(TODO: Document error handling, also document how when an error is thrown and not handled in the template that will cause a template rendering error. Then include an example of handling the error.)
+
 
 If the result is empty, than `NaN` is returned. Otherwise the value of the first matching result is returned. That result can be any type of value that Bosun can return (TODO: link to a document that shows the types that can be returned, and their structure as they appear to templates)
 
 (TODO: Example)
 
 #### EvalAll(string|Expression|ResultSlice) (result, error)
-(TODO: For the above, going to need to explain the way a result differs from the resultValue (`result[0].Value` technically))
+(TODO: For the above, going to need to explain the way a `result` differs from the `resultValue` (`result[0].Value` technically))
+
+Execute the given expression and returns the result.
+
+(Todo: Document error returns by linking to the error behavior of eval as I believe they are the same)
+
+(TODO: Need to link to possible return types and their structure)
+
+#### Graph(string|Expression|ResultSlice(TODO: Not sure this can take a result slice?))
+Creates a graph of the expression. It will error if the return type of the expression is not a `seriesSet`. 
+
+(TODO: Document auto down sampling behavior)
+
+(TODO: Document SVG vs PNG depending on interface vs email) 
+
+
 
 
 
