@@ -98,11 +98,80 @@ If set to `true`, Bosun will ping every value of the host tag that it has indexe
 Example: 
 `Ping = true`
 
+### PingDuration
+`PingDuration` is how long bosun should wait  stop pinging host tags it has seen. For example, if the value is the default of "24h", if Bosun has not indexed any datapoints for that `host` value, then it will stop attempting to ping that host until it sees datapoints that have that tag again.
+
+Example:
+`PingDuration = "24h"`
+
+### SearchSince
+`SearchSince` controlls how long autocomplete and items in UI will show up since being indexed by Bosun. The format of the value is the same as [Go's duration format](https://golang.org/pkg/time/#Duration.String) and the default is 3 days. The goal is to make it so you don'y have old items showing up in the UI. However, if you are using OpenTSDB and graphing page, you can still query metrics that don't autocomplete if you remember what they were (or look them up using OpenTSDB's native UI autocomplete).
+
+Example: `SearchSince = "72h"`
+
+### EnableSave
+`EnableSave` enables saving via the user interface. It is disabled by default. When it is enabled, users will be able to save the rule configuration file via the UI and Bosun will then write to that file on the user's behalf.
+
+Example: `EnableSave = true`
+
+### ReloadEnabled
+`ReloadEnabled` sets if reloading of the rule configuration should be enabled. If `EnableSave` is `true`, then reloading gets enabled regardless of this setting. Reloads can be triggered via the API by (TODO: Document the reload web api).
+
+Example:
+`EnableSave = true`
+
+### CommandHookPath
+When enabling saving, and a user issues a save, you have the option to run a executable or script by specifying this parameter. This allows you to do things like backup the file on writes or commit the file to a git repo.
+
+This command is passed a filename, username, message, and vargs (vargs is currently not used). If the command exits a non-zero exit code, then the changes will be reverted (the file before the changes is copied back and bosun doesn't restart).
+
+Example:
+`CommandHookPath = "/Users/kbrandt/src/hook/hook"`
+
+### GetInternetProxy (TODO: not sure this is valid)
+Current code documentation says:
+```
+// GetInternetProxy sets a proxy for outgoing network requests from Bosun. Currently it
+// only impacts requests made for shortlinks to https://goo.gl/
+```
+But not sure I trust that.
+
 ## Configuration Sections
-All your key value pairs must be defined before any sections are defined. Sections are used for things that have multiple values to configure them.
+All your key value pairs must be defined before any sections are defined. Sections are used for things that have multiple values to configure them. In partciular the various time series database providers.
 
+### DBConf
+`DBConf` defines what internal storage Bosun should use. There are currently to choices, a built-in redis like server called ledis or redis. Redis is recommended for production setups. 
 
+The default is to use ledis. If Both Redis and Ledis are defined, Redis will take preference and the ledis configuration will be ignored. Ledis is the default, so if `RedisHost` is not specified ledis will be used even if you have no `DBConf` configuration defined.
 
+#### RedisHost
+The value of `RedisHost` defines the hostname and port to connect to for redis. 
+
+#### LedisDir
+`LedisDir` defines the directory that ledis will store its data in if Ledis is being used instead of Redis. The default is `LedisDir = "ledis_data"`
+
+#### LedisBind
+`LedisBind` is the host and port to connect to for ledis. The default is `LedisBindAddr = "127.0.0.1:9565"`.
+
+#### Examples
+
+Redis Configuration:
+
+```
+[DBConf]
+	RedisHost = "localhost:6389"
+```
+
+Ledis Configuration:
+
+```
+[DBConf]
+	RedisHost = "localhost:6389"
+	LedisDir = "ledis_data"
+	LedisBindAddr = "127.0.0.1:9565"
+```
+
+### SMTPConf
 
 
 
