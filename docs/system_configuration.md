@@ -172,9 +172,63 @@ Ledis Configuration:
 ```
 
 ### SMTPConf
+`SMTPConf` Configure email for you servers
 
+#### EmailFrom
+`EmailFrom` is the address that emails from Bosun will be sent from.
 
+#### Host
+`Host` is the address of the mailserver to connect to in order to send emails
 
+#### Username
+(TODO: See how this and Password is used with email auth, don't have a current example.)
+
+#### Password
+
+#### Example
+(TODO: Complete example with username and password)
+
+```
+[SMTPConf]
+	EmailFrom = "bosun@example.com"
+	Host = "mail.example.com"
+```
+
+### OpenTSDBConf
+`OpenTSDBConf` enables an OpenTSDB provider, and also enables OpenTSDB specific functions in the expression language. 
+
+#### Host 
+`Host` specifies the hostname and port to connect to for OpenTSDB.
+
+#### Version
+`Version` can either be 2.1 or 2.2. 2.1 is the default. When it is set to 2.2 then certain features that correspond to new OpenTDSB features are enabled such as filter support (TODO: link to opentsdb filter documentation).
+
+#### ResponseLimit
+`ResponseLimit` will make requests error if the response from opentsdb is larger than this setting in bytes. This is useful to catch alerts that are pulling in more data then they need to (i.e. maybe downsampling can be used.)
+
+This does not cancel the query with OpenTSDB, but bosun will stop processing the response. 
+
+#### Example
+```
+[OpenTSDBConf]
+	Host = "ny-tsdb01:4242"
+	Version = 2.2
+	ResponseLimit = 25000000
+```
+
+#### ElasticConf
+`ElasticConf` enables you to query an elastic cluster. The es\* functions become available when this is defined (TODO: Link to the elastic funcs). The functions are designed more to be used for querying log formatted data and stats from those logs. 
+
+The functions that would allow you to use elastic effectively as a time-seris based backend do not currently exist.
+
+#### Hosts
+`Hosts` is a list of hosts that are members of the cluster. It will uses these hosts to discover all the other hosts in the cluster. So you don't have to specify every host in the cluster for Bosun to query it. [This article on Sniffing](https://github.com/olivere/elastic/wiki/Sniffing) describes how this discovery functions.
+
+#### Example
+```
+[ElasticConf]
+	Hosts = ["http://ny-lselastic01.example.com:9200", "http://ny-lselastic02.example.com:9200"]
+```
 {% endraw %}
 
 </div>
