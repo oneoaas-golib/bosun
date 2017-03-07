@@ -131,6 +131,7 @@ The message body. This is formated in HTML (TODO: Unless What? I think always cu
 The subject of the template. This is also the text that will be used in the dashboard for triggered incidents. The format of the subject is plaintext.
 
 ### Template Variables
+Template variables hold information specific to the instance of an alert. They are bound to the template's root context. That means that when you reference them in a block they need to be referenced differently just like context bound functions (TODO: link to function section explaining this).
 
 #### Ack
 The value of Ack is the URL for the alert acknowledgement. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
@@ -195,8 +196,11 @@ The time this alert was last updated
 #### Alert
 Dictionary of rule data (TODO: Document the object properly). Current values don't have documentation
 
+#### Errors
+A slice of strings that gets appended to when a context bound function (TODO: Link to section that explains this) returns an error. 
+
 ### Template Function Types
-Template functions come in two types. Functions that are global, and context-bound functions. Unfortunately, it is important to understand the difference because they are called differently in functions.
+Template functions come in two types. Functions that are global, and context-bound functions. Unfortunately, it is important to understand the difference because they are called differently in functions and have different behavior in regards to error handling (TODO: link to error handling section)
 
 #### Global
 Calling global functions is simple. The syntax is just the function name and arguments. I can be used in regular format or a chained pipe format.
@@ -233,8 +237,23 @@ template context_bound_type_example {
 }
 ~~~
 
-### Template Functions
+### Template Error handling
+Templates can throw errors at runtime (i.e. when a notification is sent). Although the configuration check makes sure that templates are valid, you can still do things like try to dereference objects that are nil pointers.
 
+When a template fails to render, a generic notification will be emailed to the people that would have recieved the alert. (TODO: Look up what happens for non-email alerts in this case and explain it there.)
+
+In order to prevent the template from completelying failing and resulting in the generic notification, errors can be handled inside the application. 
+
+Errors are handled differently depending on the type of the function (Context Bound vs Global). When context bound functions have errors the `.Errors` variable attached to the template context is appended to. This is not the case for global functions. 
+
+Global functions always returns strings except for parseDuration. When global functions error than `.Errors` is *not* appended to, but the string that would have been returned with an error is show in the template. parseDuration returns nil when it errors, and in this one exception you can't see what the error is.
+
+If the func returns a string or an image (technically an interface) the error message will be displayed in the template. If an object is returned (i.e. a result sets, a slice, etc) nil is returned and the user can check for that in the template. In both cases `.Errors` will be appended to if it is a context bound functions.
+
+(TODO: Example of template using error handling.)
+
+### Template Functions
+(TODO: Important, update the template function signatures not have two return values, since that isn't how go templates work and the function signatures changed in https://github.com/bosun-monitor/bosun/pull/1950).
 
 #### Eval(string|Expression|ResultSlice) (resultValue, error)
 
@@ -261,9 +280,11 @@ Execute the given expression and returns the result.
 #### LeftJoin(expression|string|ResultSlice?...) ([][]Result, error)
 `LeftJoin` allows you to construct tables from the results of multiple expressions. `LeftJoin` takes two or more expressions that return numberSets as arguments. The function evaluates each expression. It then joins the results of other expressions to the first expression. The join is based on the tag sets of the results. If the tagset is a subset or equal the results of the first expression, it will be joined. 
 
-The output can be though of as a table that is structured as an array of rows, where each row is an array. More technically it is a slice (array | list) of slices that point to [Result](/definitions#result) objects where each result will be a numberSet type.
+The output can be though of as a table that is structured as an array of rows, where each row is an array. More technically it is a slice of slices that point to [Result](/definitions#result) objects where each result will be a numberSet type.
 
 Example:
+
+(TODO: Create LeftJoin Example)
 
 
 
