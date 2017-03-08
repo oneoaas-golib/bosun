@@ -279,7 +279,7 @@ template eval {
     body = `
     {{$v := .Eval .Alert.Vars.r }}
     <!-- If $v is not nil (which is what .Eval returns on errors) -->
-    {{ if isNil $v }}
+    {{ if notNil $v }}
         {{ $v }}
     {{ else }}
         {{ .LastError }}
