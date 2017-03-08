@@ -255,20 +255,38 @@ If the func returns a string or an image (technically an interface) the error me
 ### Template Functions
 (TODO: Important, update the template function signatures not have two return values, since that isn't how go templates work and the function signatures changed in https://github.com/bosun-monitor/bosun/pull/1950).
 
-#### Eval(string|Expression|ResultSlice) (resultValue, error)
+#### Eval(string|Expression|ResultSlice) (resultValue)
 
 (TODO: Understand the Resultslice argument. I think it might be so that Eval can be passed as arguments to other eval (TODO: include an example of this))
 
-Executes the given expression and returns the first result with identical tags to the alert instance. In other words, it evaluates the alert within the context of the alert.
+Executes the given expression and returns the first result that includes the tag key/value pairs of the alert instance. In other words, it evaluates the expression within the context of the alert. So if you have an alert that could trigger multiple incidents (i.e. `host=*`) then the expression will return data specific to the host for this alert.
 
-(TODO: Document error handling, also document how when an error is thrown and not handled in the template that will cause a template rendering error. Then include an example of handling the error.)
+If the expression results in an error nil will be returned and `.Errors` will be appended to. If the result set is empty, than `NaN` is returned. Otherwise the value of the first matching result in the set is returned. That result can be any type of value that Bosun can return (TODO: link to a document that shows the types that can be returned, and their structure as they appear to templates) since the type returned by Eval is dependent on what the return type of the expression it evaluates. Mostly commonly it will be float64 when used to evaluate an expression that is enclosed in a reduction like in the following example:
 
+```
+alert eval {
+    template = eval
+    $series = merge(series("host=a", 0, .2), series("host=b", 0, .5))
+    $r = avg($series)
+    crit = $r
+}
 
-If the result is empty, than `NaN` is returned. Otherwise the value of the first matching result is returned. That result can be any type of value that Bosun can return (TODO: link to a document that shows the types that can be returned, and their structure as they appear to templates)
+template eval {
+    body = `
+    {{$v := .Eval .Alert.Vars.r }}
+    <!-- If $v is not nil (which is what .Eval returns on errors) -->
+    {{ if $v }}
+        {{ $v }}
+    {{ else }}
+        {{ .LastError }}
+    {{ end }}
+`
+}
+```
 
-(TODO: Example)
+The above would display "0.2" for host "a". More simply, you template could just be `{{.Eval .Alert.Vars.r}}` and it would display 0.2 assuming there are no errors.
 
-#### EvalAll(string|Expression|ResultSlice) (result, error)
+#### EvalAll(string|Expression|ResultSlice) (result)
 (TODO: For the above, going to need to explain the way a `result` differs from the `resultValue` (`result[0].Value` technically))
 
 Execute the given expression and returns the result.
@@ -277,7 +295,7 @@ Execute the given expression and returns the result.
 
 (TODO: Need to link to possible return types and their structure)
 
-#### LeftJoin(expression|string|ResultSlice?...) ([][]Result, error)
+#### LeftJoin(expression|string|ResultSlice?...) ([][]Result)
 `LeftJoin` allows you to construct tables from the results of multiple expressions. `LeftJoin` takes two or more expressions that return numberSets as arguments. The function evaluates each expression. It then joins the results of other expressions to the first expression. The join is based on the tag sets of the results. If the tagset is a subset or equal the results of the first expression, it will be joined. 
 
 The output can be though of as a table that is structured as an array of rows, where each row is an array. More technically it is a slice of slices that point to [Result](/definitions#result) objects where each result will be a numberSet type.
@@ -286,7 +304,7 @@ Example:
 
 (TODO: Create LeftJoin Example)
 
-
+#### Ack() string
 
 #### Graph(string|Expression|ResultSlice(TODO: Not sure this can take a result slice?))
 Creates a graph of the expression. It will error if the return type of the expression is not a `seriesSet`. 
@@ -335,6 +353,8 @@ A tagset is a map of of string to string (`map[string]string` in Go). The keys r
 The Value can be of different types. Technically, it is a go `interface{}` with two methods, `Type()` which returns the type of the `Value()` which returns an `interface{}` as well, but will be of the type returned by the `Type()` method.
 
 The most common case of dealing with Results in a ResultSlice is to use the `.EvalAll` func on an expression that would return a NumberSet. The following example shows how you would do that to construct a table.
+
+(TODO: Update this example with error handling)
 
 ~~~
 alert example_result_slice {
