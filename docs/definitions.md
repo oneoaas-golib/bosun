@@ -255,7 +255,11 @@ If the func returns a string or an image (technically an interface) the error me
 ### Template Functions
 (TODO: Important, update the template function signatures not have two return values, since that isn't how go templates work and the function signatures changed in https://github.com/bosun-monitor/bosun/pull/1950).
 
+(TODO: Make sure all functions specifiy built-in or context bound)
+
 #### Eval(string|Expression|ResultSlice) (resultValue)
+
+Type: Context-Bound
 
 (TODO: Understand the Resultslice argument. I think it might be so that Eval can be passed as arguments to other eval (TODO: include an example of this))
 
@@ -275,7 +279,7 @@ template eval {
     body = `
     {{$v := .Eval .Alert.Vars.r }}
     <!-- If $v is not nil (which is what .Eval returns on errors) -->
-    {{ if $v }}
+    {{ if isNil $v }}
         {{ $v }}
     {{ else }}
         {{ .LastError }}
@@ -311,7 +315,13 @@ Creates a graph of the expression. It will error if the return type of the expre
 
 (TODO: Document auto down sampling behavior)
 
-(TODO: Document SVG vs PNG depending on interface vs email) 
+(TODO: Document SVG vs PNG depending on interface vs email)
+
+#### notNil(value) bool
+
+Type: Global
+
+notNil returns true if the value is nil. This is only meant to be used with error checking on Context-Bound functions 
 
 
 
