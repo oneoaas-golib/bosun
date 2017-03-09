@@ -257,6 +257,8 @@ If the func returns a string or an image (technically an interface) the error me
 
 (TODO: Make sure all functions specifiy built-in or context bound)
 
+(TODO: Sort these when done)
+
 #### Eval(string|Expression|ResultSlice) (resultValue)
 
 Type: Context-Bound
@@ -300,13 +302,76 @@ Execute the given expression and returns the result.
 (TODO: Need to link to possible return types and their structure)
 
 #### LeftJoin(expression|string|ResultSlice?...) ([][]Result)
+
+Type: Context-Bound
+
 `LeftJoin` allows you to construct tables from the results of multiple expressions. `LeftJoin` takes two or more expressions that return numberSets as arguments. The function evaluates each expression. It then joins the results of other expressions to the first expression. The join is based on the tag sets of the results. If the tagset is a subset or equal the results of the first expression, it will be joined. 
 
 The output can be though of as a table that is structured as an array of rows, where each row is an array. More technically it is a slice of slices that point to [Result](/definitions#result) objects where each result will be a numberSet type.
 
+If the expression results in an error nil will be returned and `.Errors` will be appended to.
+
 Example:
 
-(TODO: Create LeftJoin Example)
+```
+alert leftjoin {
+    template = leftjoin
+    # Host Based
+    $osDisksMinPercentFree = last(q("min:os.disk.fs.percent_free{host=*}", "5m", ""))
+    
+    # Host and Disk Based
+    $osDiskPercentFree = last(q("sum:os.disk.fs.percent_free{disk=*,host=*}", "5m", ""))
+    $osDiskUsed = last(q("sum:os.disk.fs.space_used{disk=*,host=*}", "5m", ""))
+    $osDiskTotal = last(q("sum:os.disk.fs.space_total{disk=*,host=*}", "5m", ""))
+    $osDiskFree = $osDiskTotal - $osDiskUsed
+    
+    #Host Based Alert
+    warn = $osDiskPercentFree > 5
+}
+
+template leftjoin {
+    body = `    
+    <h3>Disk Space Utilization</h3>
+    {{ $joinResult := .LeftJoin .Alert.Vars.osDiskPercentFree .Alert.Vars.osDiskUsed .Alert.Vars.osDiskTotal .Alert.Vars.osDiskFree }}
+    <!-- $joinResult will be nill if there is an error from .LeftJoin -->
+    {{ if notNil $joinResult }}    
+        <table>
+        <tr>
+            <th>Mountpoint</th>
+            <th>Percent Free</th>
+            <th>Space Used</th>
+            <th>Space Free</th>
+            <th>Space Total</th>
+        </tr>
+        <!-- loop over each row of the result. In this case, each host/disk -->
+        {{ range $x := $joinResult }}
+            <!-- Each column in the row is the results in the same order as they 
+            were passed to .LeftJoin. The index function is built-in to Go's template
+            language and gets the nth element of a slice (in this case, each column of 
+            the row -->
+            {{ $pf :=  index $x 0}}
+            {{ $du :=  index $x 1}}
+            {{ $dt :=  index $x 2}}
+            {{ $df :=  index $x 3}}
+            <!-- .LeftJoin is like EvalAll and GraphAll in that it does not filter
+            results to the tags of the alert instance, but rather returns all results.
+            So we compare the result's host to that of the host for the alert to only
+            show disks related to the host that the alert is about. -->
+            {{ if eq $pf.Group.host $.Group.host }}
+                <tr>
+                    <td>{{$pf.Group.disk}}</td>
+                    <td>{{$pf.Value | pct}}</td>
+                    <td>{{$du.Value | bytes }}</td>
+                    <td>{{$df.Value | bytes }}</td>
+                    <td>{{$dt.Value | bytes}}</td>
+                </tr>
+            {{end}}
+        {{end}}
+    {{ else }}
+        Error Creating Table: {{ .LastError }}
+    {{end}}`
+}
+```
 
 #### Ack() string
 
@@ -323,7 +388,11 @@ Type: Global
 
 notNil returns true if the value is nil. This is only meant to be used with error checking on Context-Bound functions 
 
+#### .LastError
 
+Type: Context-Bound
+
+Returns the string representation of the last Error, or an empty string if there are no errors. 
 
 ### Types available in Templates
 Since templating is based on Go's template language, certain types will be returned. Understanding these types can help you construct richer alert notifications.
