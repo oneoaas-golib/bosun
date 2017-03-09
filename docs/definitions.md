@@ -133,17 +133,77 @@ The subject of the template. This is also the text that will be used in the dash
 ### Template Variables
 Template variables hold information specific to the instance of an alert. They are bound to the template's root context. That means that when you reference them in a block they need to be referenced differently just like context bound functions (TODO: link to function section explaining this).
 
-#### Ack
-The value of Ack is the URL for the alert acknowledgement. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
+#### .Attachments
 
-#### Expr 
-The value of `Expr` is the warn or crit expression that was used to evaluate the alert in the format of a string
+#### .Id
 
-#### Group
-A map of tags and their corresponding values for the alert. (TODO: Add Example)
+#### .Start
 
-#### Events
-The value of `Events` is a slice of [Event](http://localhost:4000/definitions#event) objects.
+#### .AlertKey
+
+#### .Tags
+
+#### .Result
+
+#### .Actions
+
+#### .NeedAck
+
+#### .Open
+
+#### .Unevaulated 
+
+#### .CurrentStatus
+
+#### .WorstStatus
+
+#### .LastAbnormalStatus
+
+#### .LastAbnormalTime
+
+#### .Alert.Text
+
+#### .Alert.Vars
+
+#### .Alert.Name
+
+#### .Alert.Crit
+
+#### .Alert.Warn
+
+#### .Alert.Depends
+
+#### .Alert.Squelch
+
+#### .Alert.CritNotification
+
+#### .Alert.WarnNotification
+
+#### .Alert.Unknown
+
+#### .Alert.MaxLogFrequency
+
+#### .Alert.IgnoreUnknown
+
+#### .Alert.UnknownsNormal
+
+#### .Alert.UnjoinedOk
+
+#### .Alert.Log
+
+#### .Alert.RunEvery
+
+#### .Alert.ReturnType
+
+#### .Alert.TemplateName
+
+#### .Alert.RawSquelch
+
+#### .Expr 
+The value of `.Expr` is the warn or crit expression that was used to evaluate the alert in the format of a string
+
+#### .Events
+The value of `.Events` is a slice of [Event](http://localhost:4000/definitions#event) objects.
 
 Example:  
 
@@ -174,29 +234,16 @@ template test {
 ~~~
 
 
-#### Incident 
-The value a URL to the incident view for the incident. The url is based on (TODO: link to systemconf setting )
 
-#### IsEmail
+#### .IsEmail
 The value of is `IsEmail` is true if the template is being rendered for an email. This allows you to use the same template for different types of notifications conditionally within the template.
 
 (TODO: Example)
 
-#### Last
-The last Event in the `History` array. (TODO: Link to Event type)
-
-#### Subject
+#### .Subject
 A string representation of the (TODO: Verify Rendered?) subject. 
 
-#### Touched
-The time this alert was last updated
-
-(TODO: link to time object in Go documentation)
-
-#### Alert
-Dictionary of rule data (TODO: Document the object properly). Current values don't have documentation
-
-#### Errors
+#### .Errors
 A slice of strings that gets appended to when a context bound function (TODO: Link to section that explains this) returns an error. 
 
 ### Template Function Types
@@ -250,16 +297,12 @@ Global functions always returns strings except for parseDuration. When global fu
 
 If the func returns a string or an image (technically an interface) the error message will be displayed in the template. If an object is returned (i.e. a result sets, a slice, etc) nil is returned and the user can check for that in the template. In both cases `.Errors` will be appended to if it is a context bound functions.
 
-(TODO: Example of template using error handling.)
+See the examples in the functions that follow to see examples of Error handling. 
 
 ### Template Functions
-(TODO: Important, update the template function signatures not have two return values, since that isn't how go templates work and the function signatures changed in https://github.com/bosun-monitor/bosun/pull/1950).
-
-(TODO: Make sure all functions specifiy built-in or context bound)
-
 (TODO: Sort these when done)
 
-#### Eval(string|Expression|ResultSlice) (resultValue)
+#### .Eval(string|Expression|ResultSlice) (resultValue)
 
 Type: Context-Bound
 
@@ -292,7 +335,10 @@ template eval {
 
 The above would display "0.2" for host "a". More simply, you template could just be `{{.Eval .Alert.Vars.r}}` and it would display 0.2 assuming there are no errors.
 
-#### EvalAll(string|Expression|ResultSlice) (result)
+#### .EvalAll(string|Expression|ResultSlice) (Result)
+
+Type: Context-Bound
+
 (TODO: For the above, going to need to explain the way a `result` differs from the `resultValue` (`result[0].Value` technically))
 
 Execute the given expression and returns the result.
@@ -301,7 +347,7 @@ Execute the given expression and returns the result.
 
 (TODO: Need to link to possible return types and their structure)
 
-#### LeftJoin(expression|string|ResultSlice?...) ([][]Result)
+#### .LeftJoin(expression|string|ResultSlice?...) ([][]Result)
 
 Type: Context-Bound
 
@@ -373,22 +419,43 @@ template leftjoin {
 }
 ```
 
-#### Ack() string
+#### .Ack() (string)
 
-#### Graph(string|Expression|ResultSlice(TODO: Not sure this can take a result slice?))
+Type: Context-Bound
+
+The value returned by `.Ack` is the URL for the alert acknowledgement. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
+
+#### .Incident() (string)
+
+Type: Context-Bound
+
+The value returned by `.Incident` is the URL to Bosun's incident view. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
+
+#### .Graph(string|Expression|ResultSlice(TODO: Not sure this can take a result slice?))
+
+Type: Context-Bound
+
 Creates a graph of the expression. It will error if the return type of the expression is not a `seriesSet`. 
 
 (TODO: Document auto down sampling behavior)
 
 (TODO: Document SVG vs PNG depending on interface vs email)
 
-#### notNil(value) bool
+
+#### .Group() (TagSet)
+A map of tags and their corresponding values for the alert. (TODO: Add Example)
+
+#### notNil(value) (bool)
 
 Type: Global
 
 notNil returns true if the value is nil. This is only meant to be used with error checking on Context-Bound functions 
 
-#### .LastError
+#### .Last() (string)
+
+The last Event in the `.History` array. (TODO: Link to Event type)
+
+#### .LastError() (string)
 
 Type: Context-Bound
 
