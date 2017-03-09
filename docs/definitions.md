@@ -423,15 +423,28 @@ template leftjoin {
 
 Type: Context-Bound
 
-The value returned by `.Ack` is the URL for the alert acknowledgement. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
+`.Ack` creates a link to Bosun's view for alert acknowledgement. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
 
 #### .Incident() (string)
 
 Type: Context-Bound
 
-The value returned by `.Incident` is the URL to Bosun's incident view. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
+`.Incident` creates a link to Bosun's incident view. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
 
-#### .Graph(string|Expression|ResultSlice(TODO: Not sure this can take a result slice?))
+#### .GraphLink(string) (string)
+
+Type: Context-Bound
+
+`.GraphLink` creates a link to Bosun's graph tab on Bosun's expression page. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link. The link will set the expression and the time that represents "now". The expression is the expression string that is passed to `.GraphLink`. The time is set to the time of the alert.
+
+#### .GraphLink(string) (string)
+
+Type: Context-Bound
+
+`.GraphLink` creates a link to Bosun's rule editor page. This is useful to provide a quick link to the view someone would use to edit the alert. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link. The link will set the the alert, which template should be rendered, and time on the rule editor page. The time that represents "now" will be the time of the alert. The rule editor's alert will be set to point to the alert definition that corresponds to this alert. However, it will always be loading the current definitions, so it is possible that the alert or template definitions will have changed since the template was rendered. 
+
+
+#### .Graph(string|Expression|ResultSlice(TODO: Not sure this can take a result slice?)) (image)
 
 Type: Context-Bound
 
@@ -441,15 +454,50 @@ Creates a graph of the expression. It will error if the return type of the expre
 
 (TODO: Document SVG vs PNG depending on interface vs email)
 
+#### .GraphAll(string|Expression|ResultSlice) (image)
+
+Type: Context-Bound
+
+(TODO: Document)
+
+#### .GetMeta(metric, name string, tags string|TagSet) (object)
+
+Type: Context-Bound
+
+(TODO: Document)
+
+#### .HTTPGet(url string) string
+
+Type: Context-Bound
+
+(TODO: Document)
+
+#### .HTTPGet(url string) (*jsonq.JsonQuery)
+
+Type: Context-Bound
+
+(TODO: Document, link to jsonq library and how to work with objects. Note limitation about top level object being an array)
+
+#### .HTTPPost(url, bodyType, data string) (string)
+
+Type: Context-Bound
+
+(TODO: Document)
+
+#### .ESQuery(indexRoot expr.ESIndexer, filter expr.ESQuery, sduration, eduration string, size int) (interface{})
+
+Type: Context-Bound
+
+(TODO: Document, and figure out what the return type can be)
+
+#### .ESQueryAll(indexRoot expr.ESIndexer, filter expr.ESQuery, sduration, eduration string, size int) (interface{})
+
+Type: Context-Bound
+
+(TODO: Document, and figure out what the return type can be)
 
 #### .Group() (TagSet)
-A map of tags and their corresponding values for the alert. (TODO: Add Example)
-
-#### notNil(value) (bool)
-
-Type: Global
-
-notNil returns true if the value is nil. This is only meant to be used with error checking on Context-Bound functions 
+A map of tags and their corresponding values for the alert. (TODO: Add Example) 
 
 #### .Last() (string)
 
@@ -460,6 +508,60 @@ The last Event in the `.History` array. (TODO: Link to Event type)
 Type: Context-Bound
 
 Returns the string representation of the last Error, or an empty string if there are no errors. 
+
+#### .Lookup(table string, key string) (string)
+
+Type: Context-Bound
+
+(TODO: Document + Example, also does this use search or is it like lookup series?)
+
+#### .LookupAll(table string, key string) (string)
+
+Type: Context-Bound
+
+(TODO: Document + Example, also does this use search or is it like lookup series?)
+
+#### notNil(value) (bool)
+
+Type: Global
+
+notNil returns true if the value is nil. This is only meant to be used with error checking on Context-Bound functions
+
+#### bytes(string|int|float) (string)
+
+Type: Global
+
+(TODO: Document)
+
+#### pct(number) (string)
+
+Type: Global
+
+(TODO: Document)
+
+#### replace(s, old, new string, n int) (string)
+
+Type: Global
+
+(TODO: Document - can just take from golang string's replace mostly)
+
+#### short(string) (string)
+
+Type: Global
+
+(TODO: Document)
+
+#### html(string) (htemplate.HTML)
+
+Type: Global
+
+(TODO: Document)
+
+#### parseDuration(string) (*time.Duration)
+
+Type: Global
+
+(TODO: Document)
 
 ### Types available in Templates
 Since templating is based on Go's template language, certain types will be returned. Understanding these types can help you construct richer alert notifications.
