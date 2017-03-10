@@ -133,29 +133,87 @@ The subject of the template. This is also the text that will be used in the dash
 ### Template Variables
 Template variables hold information specific to the instance of an alert. They are bound to the template's root context. That means that when you reference them in a block they need to be referenced differently just like context bound functions (TODO: link to function section explaining this).
 
+#### Example of template variables
+This example shows examples of the template variables documented below that are simple enough to be in a table:
+
+```
+alert vars {
+    template = vars
+    warn = avg(q("avg:rate:os.cpu{host=*bosun*}", "5m", ""))
+}
+
+template vars {
+    body = `
+    <!-- Examples of Variables -->
+    <table>
+        <tr>
+            <th>Variable</th>
+            <th>Example Value</th>
+        </tr>
+        <tr>
+            <!-- Incident Id -->
+            <td>Id</td>
+            <td>{{ .Id }}</td>
+        </tr>
+        <tr>
+            <!-- Start Time of Incident -->
+            <td>Start</td>
+            <td>{{ .Start }}</td>
+        </tr>
+        <tr>
+            <!-- Alert Key -->
+            <td>AlertKey</td>
+            <td>{{.AlertKey}}</td>
+        </tr>
+        <tr>
+            <!-- The Tags for the Alert instance -->
+            <td>Tags</td>
+            <td>{{.Tags}}</td>
+        </tr>
+        <tr>
+            <!-- The rendered subject field of the template. -->
+            <td>Subject</td>
+            <td>{{.Subject}}</td>
+        </tr>
+    </table>
+    `
+    subject = `This is the subject`
+}
+```
+
 #### .Attachments
+When the graph functions that generate images are used they are added to `.Attachments`. Although it is available, you should *not* need to access this variable from templates. It is a slice of pointers to Attachment objects. An attachment has three fields, Data (a byte slice), Filename (string), and ContentType string. 
 
 #### .Id
+`.Id` is a unique number that identifies an incident in Bosun. It is an int64, see (TODO: link to usage: liftime of an incident).
 
 #### .Start
+`.Start` is the the time the incident started and a Golang time.Time object. This means you can work with the time object if you need to, but a simple `{{ .Start }}` will print the time in 
 
 #### .AlertKey
+`.AlertKey` is a string representation of the alert key. The alert key is in the format alertname{tagset}. For example `diskused{host=ny-bosun01,disk=/}`.
 
 #### .Tags
+`.Tags` is a string representation of the tags for the alert. It is in the format of tagkey=tagvalue,tag=tagvalue. For example `host=ny-bosun01,disk=/`
 
 #### .Result
 
 #### .Actions
 
-#### .NeedAck
+#### .Subject
+`.Subject` is the rendered subject field of the template as a string. It is only available in the body, and does not show up via Bosun's testing UI.
 
-#### .Open
+#### .NeedAck
+`.NeedAck` is a boolean value that is true if the alert has not been acknowledged yet.
 
 #### .Unevaulated 
+`.Unevaluated` is a boolean value that is true if the alert did not trigger because of a dependency. This field would only show true when viewed on the dashboard.
 
 #### .CurrentStatus
+`.CurrentStatus` is a [status object](/definitions#status) representing the current severity state of the incident. 
 
 #### .WorstStatus
+`.WorstStatus` is a [status object](/definitions#status) representing the highest severity reached in the lifetime of the incident. 
 
 #### .LastAbnormalStatus
 
@@ -203,7 +261,7 @@ Template variables hold information specific to the instance of an alert. They a
 The value of `.Expr` is the warn or crit expression that was used to evaluate the alert in the format of a string
 
 #### .Events
-The value of `.Events` is a slice of [Event](http://localhost:4000/definitions#event) objects.
+The value of `.Events` is a slice of [Event](/definitions#event) objects.
 
 Example:  
 
@@ -633,6 +691,14 @@ template example_result_slice {
 }
 ~~~
 
+#### Status 
+The `Status` type is an integer that represents the current severity status of the incident with associated string repsentation. The possible values and their string representation is:
+
+ * 0 for "none"
+ * 1 for "normal"
+ * 2 for "warning"
+ * 3 for "critical"
+ * 4 for "unknown"
 
 
 ## Notifications
