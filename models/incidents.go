@@ -200,13 +200,15 @@ func (s Status) IsCritical() bool { return s == StCritical }
 func (s Status) IsUnknown() bool  { return s == StUnknown }
 
 type Action struct {
+	// These are available to users via the template language. Changes here
+	// should be reflected in the documentation
 	User    string
 	Message string
 	Time    time.Time
 	Type    ActionType
 }
 
-type ActionType int
+type ActionType int // Available to users in templates, document changes in Bosun docs
 
 const (
 	ActionNone ActionType = iota

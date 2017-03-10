@@ -249,7 +249,7 @@ When the graph functions that generate images are used they are added to `.Attac
 `.LastAbnormalStatus` is a [status object](/definitions#status) representing the the most recent non-normal severity for the incident. This will be "none" when using Bosun's testing UI.
 
 #### .LastAbnormalTime
-`.LastAbnormalTime` is an int64 representing the time of `.LastAbnormalStatus`. This is not a time.Time object, but rather a unix epoch.
+`.LastAbnormalTime` is an int64 representing the time of `.LastAbnormalStatus`. This is not a time.Time object, but rather a unix epoch. This will be 0 when using Bosun's testing UI.
 
 #### .Alert.Text
 
@@ -655,6 +655,21 @@ Type: Global
 
 ### Types available in Templates
 Since templating is based on Go's template language, certain types will be returned. Understanding these types can help you construct richer alert notifications.
+
+#### Action
+An Action is an object that represents actions that people do on an incident. It has the following fields:
+
+ * User: a string of the username for the person that took the action
+ * Message: a string of an optional message that a user added to the action when taking it
+ * Time: a time.Time object representing the time the action it was taken
+ * ActionType: an int representing the type of action. The values and their strings are:
+   * 0: "none"
+   * 1: "Acknowledged"
+   * 2: "Closed"
+   * 3: "Forgotten"
+   * 4: "ForceClosed"
+   * 5: "Purged"
+   * 6: "Note"
 
 #### Event
 An Event represent a change in the [severity state](/usage#severity-states) within the [duration of an incident](/usage#the-lifetime-of-an-incident). When an incident triggers, it will have at least one event.  An Event contains the following fields
