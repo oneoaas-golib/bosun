@@ -175,6 +175,36 @@ template vars {
             <td>Subject</td>
             <td>{{.Subject}}</td>
         </tr>
+        <tr>
+            <!-- Boolean that is true if the alert has not been acknowledged -->
+            <td>NeedAck</td>
+            <td>{{.NeedAck}}</td>
+        </tr>
+        <tr>
+            <!-- Boolean that is true if the alert is unevaluated (due to a dependency) -->
+            <td>Unevaluated</td>
+            <td>{{.Unevaluated}}</td>
+        </tr>
+        <tr>
+            <!-- Status object representing current severity -->
+            <td>CurrentStatus</td>
+            <td>{{.CurrentStatus}}</td>
+        </tr>
+        <tr>
+            <!-- Status object representing the highest severity -->
+            <td>WorstStatus</td>
+            <td>{{.WorstStatus}}</td>
+        </tr>
+        <tr>
+            <!-- Status object representing the the most recent non-normal severity -->
+            <td>LastAbnormalStatus</td>
+            <td>{{.LastAbnormalStatus}}</td>
+        </tr>
+        <tr>
+            <!-- Unix epoch (as int64) representing the time of LastAbnormalStatus -->
+            <td>LastAbnormalTime</td>
+            <td>{{.LastAbnormalTime}}</td>
+        </tr>
     </table>
     `
     subject = `This is the subject`
@@ -210,14 +240,16 @@ When the graph functions that generate images are used they are added to `.Attac
 `.Unevaluated` is a boolean value that is true if the alert did not trigger because of a dependency. This field would only show true when viewed on the dashboard.
 
 #### .CurrentStatus
-`.CurrentStatus` is a [status object](/definitions#status) representing the current severity state of the incident. 
+`.CurrentStatus` is a [status object](/definitions#status) representing the current severity state of the incident. This will be "none" when using Bosun's testing UI.
 
 #### .WorstStatus
-`.WorstStatus` is a [status object](/definitions#status) representing the highest severity reached in the lifetime of the incident. 
+`.WorstStatus` is a [status object](/definitions#status) representing the highest severity reached in the lifetime of the incident. This will be "none" when using Bosun's testing UI.
 
 #### .LastAbnormalStatus
+`.LastAbnormalStatus` is a [status object](/definitions#status) representing the the most recent non-normal severity for the incident. This will be "none" when using Bosun's testing UI.
 
 #### .LastAbnormalTime
+`.LastAbnormalTime` is an int64 representing the time of `.LastAbnormalStatus`. This is not a time.Time object, but rather a unix epoch.
 
 #### .Alert.Text
 

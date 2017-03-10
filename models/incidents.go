@@ -9,6 +9,10 @@ import (
 )
 
 type IncidentState struct {
+	// Since IncidentState is embedded into a template's Context these fields
+	// are available to users. Changes to this object should be reflected
+	// in Bosun's documentation and changes that might break user's teamplates.
+	// need to be considered.
 	Id       int64
 	Start    time.Time
 	End      *time.Time
