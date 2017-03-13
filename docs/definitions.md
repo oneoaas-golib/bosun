@@ -205,6 +205,47 @@ template vars {
             <td>LastAbnormalTime</td>
             <td>{{.LastAbnormalTime}}</td>
         </tr>
+        <tr>
+            <!-- The name of the alert -->
+            <td>Alert.Name</td>
+            <td>{{.Alert.Name}}</td>
+        </tr>
+        <tr>
+            <!-- Get Override Uknown Duration -->
+            <td>Alert.Unknown</td>
+            <td>{{.Alert.Unknown}}</td>
+        </tr>
+        <tr>
+            <!-- Get Ignore Unknown setting for the alert (bool) -->
+            <td>Alert.IgnoreUnknown</td>
+            <td>{{.Alert.IgnoreUnknown}}</td>
+        </tr>
+        <tr>
+            <!-- Get UnknownsNormal setting for the alert (bool) -->
+            <td>Alert.UnknownsNormal</td>
+            <td>{{.Alert.UnknownsNormal}}</td>
+        </tr>
+        <tr>
+            <!-- Get UnjoinedOk setting for the alert (bool) -->
+            <td>Alert.UnjoinedOK</td>
+            <td>{{.Alert.UnjoinedOK}}</td>
+        </tr>
+        <tr>
+            <!-- Get the Log setting for the alert (bool) -->
+            <td>Alert.Log</td>
+            <td>{{.Alert.Log}}</td>
+        </tr>
+        <tr>
+            <!-- Get the MaxLogFrequency setting for the alert -->
+            <td>Alert.MaxLogFrequency</td>
+            <td>{{.Alert.MaxLogFrequency}}</td>
+        </tr>
+        <tr>
+            <!-- Get the root template name -->
+            <td>Alert.TemplateName</td>
+            <td>{{.Alert.TemplateName}}</td>
+        </tr>
+        
     </table>
     `
     subject = `This is the subject`
@@ -240,7 +281,7 @@ Example:
 template result {
     body = `
     {{ if notNil .Result }}
-        {{ .Result.Group }}
+        {{ .Result.Expr }}
         {{ .Result.Value }}
     {{ end }}
     `
@@ -298,45 +339,111 @@ Example:
 `.LastAbnormalTime` is an int64 representing the time of `.LastAbnormalStatus`. This is not a time.Time object, but rather a unix epoch. This will be 0 when using Bosun's testing UI.
 
 #### .Alert.Text
+`.Alert.Text` is the raw text of the alert definition as a string. It includes comments:
+
+```
+template text {
+    body = `<pre>{{.Alert.Text}}</pre>`
+}
+
+alert text {
+    # A comment
+    template = text
+    warn = 1
+}
+```
 
 #### .Alert.Vars
+`.Alert.Vars` is a map of string to string. Any variables declared in the alert definition get an entry in the map. The key is name of the variable without the dollar sign prefix, and the value is the text that the variable maps to (Variables in Bosun don't story values, and are just simple text replacement.) It the variable does not exist than an empty string will be returned. Global variables are only accessible via a mapping in the alert definition as show in the example below.
+
+```
+Example:
+$aGlobalVar = "Hiya"
+
+template alert.vars {
+    body = `
+        {{.Alert.Vars.foo}}
+        
+        <!-- baz returns an empty string since it is not defined -->
+        {{.Alert.Vars.baz}}
+        
+        <!-- Global vars don't work -->
+        {{.Alert.Vars.aGlobalVar }}
+        
+        <!-- Workaround for Global vars -->
+        {{.Alert.Vars.fakeGlobal }}
+    `
+}
+
+alert alert.vars {
+    template = alert.vars
+    $foo = 1 + 1
+    $fakeGlobal = $aGlobalVar
+    warn = $foo
+}
+```
 
 #### .Alert.Name
+`.Alert.Name` holds the the name of the alert. For example for an alert defined `alert myAlert { ... }` the value would be myAlert.
 
 #### .Alert.Crit
+`.Alert.Crit` is a [bosun expression object](/definitions#expr) that maps to the crit expression in the alert. It is only meant to be used to display the expression, or run the expression by passing it to functions like `.Eval`.
+
+Example:
+```
+template expr {
+    body = `
+        Expr: {{.Alert.Warn}}</br>
+        <!-- note that an error from eval is not checked in this example, 
+        see other examples for error checking -->
+        Result: {{.Eval .Alert.Warn}}
+        
+    `
+}
+
+alert expr {
+    template = expr
+    warn = 1 + 1
+    crit = 3
+}
+```
 
 #### .Alert.Warn
+Like `.Alert.Crit` but the crit expression.
 
 #### .Alert.Depends
-
-#### .Alert.Squelch
+Like `.Alert.Crit` but the depends expression.
 
 #### .Alert.CritNotification
 
 #### .Alert.WarnNotification
 
 #### .Alert.Unknown
+`.Alert.Unknown` is a time.Duration that is the duration for unknowns if set to override the global duration.  It will be zero if the alert is using the global setting.
 
 #### .Alert.MaxLogFrequency
+`.Alert.MaxLogFrequency` is a time.Durtion that shows the alert setting for a Log Alert that determines how often a log alert should send its notification.
 
 #### .Alert.IgnoreUnknown
+`.Alert.IgnoreUnknown` is a bool that will be true if ignoreunknown is set on the alert.
 
 #### .Alert.UnknownsNormal
+`.Alert.UnknownsNormal` is a bool that is true of the unknowns normal setting is true. This means unknown events will be treated as normal events.
 
-#### .Alert.UnjoinedOk
+#### .Alert.UnjoinedOK
+`.Alert.UnjoinedOk` is a bool that is true of the unjoinedOK is set to true on the alert. This makes it so when doing operations with two sets, if there are items in one set that have no match they will be ignored instead of triggering an error.
 
 #### .Alert.Log
+`.Alert.Log` is a bool that is true if this is a log style alert.
 
 #### .Alert.RunEvery
-
-#### .Alert.ReturnType
+`.Alert.RunEvery` is an int that shows an override for how often the alert should run. It is a multiplper that overrides how many check intervals exist between each run.
 
 #### .Alert.TemplateName
-
-#### .Alert.RawSquelch
+`.Alert.TemplateName` is the name of the template that the alert is configured to use.
 
 #### .Expr 
-The value of `.Expr` is the warn or crit expression that was used to evaluate the alert in the format of a string
+The value of `.Expr` is the warn or crit expression that was used to evaluate the alert in the format of a string.
 
 #### .Events
 The value of `.Events` is a slice of [Event](/definitions#event) objects.
@@ -732,6 +839,9 @@ An Event Result (note: in the code this is actually a models.Result) has two pro
 * **Value**: A float representing the result of the parent expression.
 
 There is a third property **Computations**. But it is not recommended that you access it even though it is available and it will not be documented.
+
+### Expr
+A `.Expr` is a bosun expression. Although various properties and methods are attached to it, it should only be used for printing (to see the underlying text) and for passing it to function that evaluate expressions such as `.Eval` within templates.
 
 #### ResultSlice
 A `ResultSlice` is returned by using the `.EvalAll` function. It is a slice of pointers to `Result` objects. Each result represents the an item in the set when the type is something like a NumberSet or a SeriesSet.
