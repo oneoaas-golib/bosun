@@ -227,8 +227,54 @@ When the graph functions that generate images are used they are added to `.Attac
 `.Tags` is a string representation of the tags for the alert. It is in the format of tagkey=tagvalue,tag=tagvalue. For example `host=ny-bosun01,disk=/`
 
 #### .Result
+`.Result` is a pointer to a "result object". This is *not* the same as the [result object](/definitions#result-1) i.e. the object return by `.Eval`. Rather is has the following properties:
+
+    * Value: The number returned by the expression (technically a float64)
+    * Expr: The expression evaluated as a string
+
+If the severity status is Warn that it will be the result of the Warn expression, or if it crit than it will be a pointer to the result of the crit expressoin.
+
+Example:
+
+```
+template result {
+    body = `
+    {{ if notNil .Result }}
+        {{ .Result.Group }}
+        {{ .Result.Value }}
+    {{ end }}
+    `
+}
+
+alert result {
+    template = result
+    warn = 1
+    crit = 2
+}
+```
 
 #### .Actions
+`.Actions` is a slice of of [action objects](/definitions#action) of actions taken on the incident. They are ordered by time from past to recent. This list will be empty when using Bosun's testing UI.
+
+Example:
+```
+<table>
+    <tr>
+        <th>User</th>
+        <th>Action Type</th>
+        <th>Time</th>
+        <th>Message</th>
+    <tr>
+    {{ range $action := .Actions }}
+        <tr>
+            <td>{{.User}}</th>
+            <td>{{.Type}}</th>
+            <td>{{.Time}}</th>
+            <td>{{.Message}}</th>
+        </tr>
+    {{ end }}
+</table>
+```
 
 #### .Subject
 `.Subject` is the rendered subject field of the template as a string. It is only available in the body, and does not show up via Bosun's testing UI.
@@ -327,11 +373,6 @@ template test {
 
 #### .IsEmail
 The value of is `IsEmail` is true if the template is being rendered for an email. This allows you to use the same template for different types of notifications conditionally within the template.
-
-(TODO: Example)
-
-#### .Subject
-A string representation of the (TODO: Verify Rendered?) subject. 
 
 #### .Errors
 A slice of strings that gets appended to when a context bound function (TODO: Link to section that explains this) returns an error. 
