@@ -806,9 +806,24 @@ template meta {
 
 Type: Context-Bound
 
-(TODO: Document)
+`.HTTPGet` fetches a url and returns the raw text as a string, unless there is an error or an http response code `>= 300` in which case the response code or error is displayed and `.Errors` is appended to. The client will identify itself as Bosun via the user agent header. Since templates are procedural and this meant to for fetching extra information, the timeout is set to five seconds. Otherwise this function could severly slow down the delivery of notifications.
 
-#### .HTTPGet(url string) (*jsonq.JsonQuery)
+Example:
+
+```
+template httpget {
+    body = `
+    {{ .HTTPGet "http://localhost:9090"}}
+    `
+}
+
+alert httpget {
+    template = httpget
+    warn = 1
+}
+```
+
+#### .HTTPGetJSON(url string) (*jsonq.JsonQuery)
 
 Type: Context-Bound
 
