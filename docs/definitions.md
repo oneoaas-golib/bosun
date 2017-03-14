@@ -476,13 +476,11 @@ template test {
 }
 ~~~
 
-
-
 #### .IsEmail
 The value of is `IsEmail` is true if the template is being rendered for an email. This allows you to use the same template for different types of notifications conditionally within the template.
 
 #### .Errors
-A slice of strings that gets appended to when a context bound function (TODO: Link to section that explains this) returns an error. 
+A slice of strings that gets appended to when a context bound function returns an error. 
 
 ### Template Function Types
 Template functions come in two types. Functions that are global, and context-bound functions. Unfortunately, it is important to understand the difference because they are called differently in functions and have different behavior in regards to error handling (TODO: link to error handling section)
@@ -673,12 +671,6 @@ Type: Context-Bound
 
 Type: Context-Bound
 
-`.GraphLink` creates a link to Bosun's graph tab on Bosun's expression page. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link. The link will set the expression and the time that represents "now". The expression is the expression string that is passed to `.GraphLink`. The time is set to the time of the alert.
-
-#### .GraphLink(string) (string)
-
-Type: Context-Bound
-
 `.GraphLink` creates a link to Bosun's rule editor page. This is useful to provide a quick link to the view someone would use to edit the alert. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link. The link will set the the alert, which template should be rendered, and time on the rule editor page. The time that represents "now" will be the time of the alert. The rule editor's alert will be set to point to the alert definition that corresponds to this alert. However, it will always be loading the current definitions, so it is possible that the alert or template definitions will have changed since the template was rendered. 
 
 
@@ -686,17 +678,38 @@ Type: Context-Bound
 
 Type: Context-Bound
 
-Creates a graph of the expression. It will error if the return type of the expression is not a `seriesSet`. 
+Creates a graph of the expression. It will error (That can not be handled) if the return type of the expression is not a `seriesSet`. If the expression is a an OpenTSDB query, it will be auto downsampled so that there are approx no more than 1000 points per series in the graph. Like `.Eval`, it filters the results to only those that include the tag key/value pairs of the alert instance. In other words, in the example, for an alert on `host=a` only the series for host a would be graphed.
 
-(TODO: Document auto down sampling behavior)
+When the rendered graph is viewed in Bosun's UI (either the config test UI, or the dashboard) than the Graph will be an SVG. For email notifications the graph is rendered into a PNG. This is because most email providers don't allow SVGs embedded in emails.
 
-(TODO: Document SVG vs PNG depending on interface vs email)
+Example:
+
+```
+alert graph {
+    template = graph
+    $series = merge(series("host=a", 0, 1, 15, 2, 30, 3), series("host=b", 0, 2, 15, 3, 30, 1))
+    $r = avg($series)
+    crit = $r
+}
+
+template graph {
+    body = `
+    {{$v := .Graph .Alert.Vars.series }}
+    <!-- If $v is not nil (which is what .Graph returns on errors) -->
+    {{ if notNil $v }}
+        {{ $v }}
+    {{ else }}
+        {{ .LastError }}
+    {{ end }}
+`
+}
+```
 
 #### .GraphAll(string|Expression|ResultSlice) (image)
 
 Type: Context-Bound
 
-(TODO: Document)
+`.GraphAll` behaves exactly like `.Graph` but does not filter results to match the tagset of the alert. So if you changed the call in the example for `.Graph` to be `.GraphAll`, in an alert about `host=a` the series for both host a and host b would displayed (unlike Graph where only the series for host a would be displayed). 
 
 #### .GetMeta(metric, name string, tags string|TagSet) (object)
 
