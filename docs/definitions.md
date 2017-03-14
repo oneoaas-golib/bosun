@@ -682,6 +682,8 @@ Creates a graph of the expression. It will error (That can not be handled) if th
 
 When the rendered graph is viewed in Bosun's UI (either the config test UI, or the dashboard) than the Graph will be an SVG. For email notifications the graph is rendered into a PNG. This is because most email providers don't allow SVGs embedded in emails.
 
+If there is an error executing `.Graph` than a string showing the error will be returned instead of an image and `.Errors` will be appended to.
+
 Example:
 
 ```
@@ -694,13 +696,7 @@ alert graph {
 
 template graph {
     body = `
-    {{$v := .Graph .Alert.Vars.series }}
-    <!-- If $v is not nil (which is what .Graph returns on errors) -->
-    {{ if notNil $v }}
-        {{ $v }}
-    {{ else }}
-        {{ .LastError }}
-    {{ end }}
+    {{.Graph .Alert.Vars.series }}
 `
 }
 ```
