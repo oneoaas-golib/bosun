@@ -711,7 +711,82 @@ Type: Context-Bound
 
 Type: Context-Bound
 
-(TODO: Document)
+`.GetMeta` fetches information from Bosun's metadata store. (TODO: more docs)
+
+Example:
+```
+
+alert meta {
+    template = meta
+    $metric = os.mem.free
+    warn = avg(q("avg:rate:$metric{host=*bosun*}", "5m", ""))
+}
+
+template meta {
+    body = `
+        <h1>Metric Metadata</h1>
+        <!-- Metric Metadata as slice -->
+        {{ $metricMetadata := .GetMeta .Alert.Vars.metric "" "" }}
+        {{ if notNil $metricMetadata }}
+            <h2>Metric Metadata as Slice</h2>
+            <table>
+                <tr>
+                    <th>Property</th>
+                    <th>Value</th>
+                </tr>
+                {{ range $prop := $metricMetadata }}
+                    <tr>
+                        <td>{{ $prop.Name }}</td>
+                        <td>{{ $prop.Value }}</td>
+                    </tr>
+                {{ end }}
+            </table>
+        {{ else }}
+            {{ .LastError }}
+        {{ end }}
+        
+        <h2>Metric Metadata as string values</h2>
+        <!-- Metric Metadata as strings (specific keys) -->
+        (TODO: Figure out why a non-existing metric causes a panic)
+        Desc: {{ .GetMeta .Alert.Vars.metric "desc" "" }}</br>
+        Unit: {{ .GetMeta .Alert.Vars.metric "unit" "" }}</br>
+        RateType: {{ .GetMeta .Alert.Vars.metric "rate" "" }}</br>
+        
+        <h1>Tag Metadata<h1>
+        <h2>Tag Metadata as slice</h2>
+        {{ $tagMeta := .GetMeta "" "" "host=ny-web01" }}
+        {{ if notNil $tagMeta }}
+            <table>
+                <tr>
+                    <th>Property</th>
+                    <th>Tags</th>
+                    <th>Value</th>
+                    <th>Last Touched Time</th>
+                </tr>
+                {{ range $metaSend := $tagMeta }}
+                    <tr>
+                        <td>{{ $metaSend.Name }}</td>
+                        <td>{{ $metaSend.Tags }}</td>
+                        <td>{{ $metaSend.Value }}</td>
+                        <td>{{ $metaSend.Time }}</td>
+                    </tr>
+                {{ end }}
+            </table>
+        {{ else }}
+            {{ .LastError }}
+        {{ end }}
+        
+        <h2>Keyed Tag Metadata</h2>
+        <!-- Will return first match -->
+        {{ $singleTagMeta := .GetMeta "" "memory" "host==ny-web01" }}
+        {{ if notNil $singleTagMeta }}
+            {{ $singleTagMeta }}
+        {{ else }}
+            {{ .LastError }}
+        {{ end }}
+    `
+}
+```
 
 #### .HTTPGet(url string) string
 
