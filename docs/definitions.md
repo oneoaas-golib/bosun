@@ -707,11 +707,26 @@ Type: Context-Bound
 
 `.GraphAll` behaves exactly like `.Graph` but does not filter results to match the tagset of the alert. So if you changed the call in the example for `.Graph` to be `.GraphAll`, in an alert about `host=a` the series for both host a and host b would displayed (unlike Graph where only the series for host a would be displayed). 
 
-#### .GetMeta(metric, name string, tags string|TagSet) (object)
+#### .GetMeta(metric, key string, tags string|TagSet) (object|string)
 
 Type: Context-Bound
 
-`.GetMeta` fetches information from Bosun's metadata store. (TODO: more docs)
+`.GetMeta` fetches information from Bosun's metadata store. This function returns two types of metadata: metric metadata and metadata attached to tags. If the metric argument is a non-empty string, them metric metadata is fetched, otherwise tag metadata is fetched. 
+
+For both Metric and Tag metadata, in case where the key is a non-empty string then a string will be returned which will either be the value or an error. In cases where key is an empty string, a slice of objects is returned unless there is an error in which case nil is returned. The example shows these cases.
+
+When a slice of objects are returned, the objects have the following properties:
+
+ * Metric: A string representing the metric name
+ * Tags: A map of tag keys to tag values (string[string]) for the metadata
+ * Name: The key of the metadata (same as key argument to this function, if provided)
+ * Value: A string
+ * Time: Last time this Metadata was updated
+
+For Metric metadata the Tags field will be empty, and for tag metadata the metric field is empty. 
+
+For Tag metadata, metadata is returned that includes the key/value pairs provided as an argument. So for example, `host=a` would also return metadata that is tagged `host=a,interface=eth0`.
+
 
 Example:
 ```
@@ -747,7 +762,6 @@ template meta {
         
         <h2>Metric Metadata as string values</h2>
         <!-- Metric Metadata as strings (specific keys) -->
-        (TODO: Figure out why a non-existing metric causes a panic)
         Desc: {{ .GetMeta .Alert.Vars.metric "desc" "" }}</br>
         Unit: {{ .GetMeta .Alert.Vars.metric "unit" "" }}</br>
         RateType: {{ .GetMeta .Alert.Vars.metric "rate" "" }}</br>
