@@ -487,7 +487,6 @@ Returns the length of the longest streak of values that evaluate to true (i.e. m
 Sum.
 
 # Group Functions
-{: .exprFunc}
 
 Group functions modify the OpenTSDB groups.
 
