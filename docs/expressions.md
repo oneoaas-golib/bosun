@@ -289,7 +289,7 @@ See Annotation Filters above to understand filters. FieldsCSV is a list of colum
 
 For example: `antable("owner:sre AND category:outage", "start,end,user,owner,category,message", "8w", "")` will return a table of annotations with the selected columns in FieldCSV going back 8 weeks from the time of the query.
 
-# ancounts(filter string, startDuration string, endDuration string) seriesSet
+## ancounts(filter string, startDuration string, endDuration string) seriesSet
 ancounts returns a series representing the number of annotations that matched the filter for the specified period. One might expect a number instead of a series, but by having a series it has a useful property. We can count outages that span'd across the requested time frame and count them as fractional outages.
 
 If an annotation's timespan is contained entirely within the request timespan, or the timespan of the request is within the the timespan of the annotation, a 1 is added to the series.
@@ -324,7 +324,7 @@ The float values means that 36% of the annotation fell with the requested time f
 Note: The index values above, 0, 1, and 2 are disregarded and are just there so we can use the same underlying type as a time series.
 
 
-# andurations(filter string, startDuration, endDuration string) seriesSet
+## andurations(filter string, startDuration, endDuration string) seriesSet
 andurations behaves in a similiar way to ancounts. The difference is that the values you returned will be the duration of annotation in seconds. 
 
 If the duration spans part of the requested time frame, only the duration of the annotation that falls within the timerange will be returns as a value for that annotation. If the annotation starts before the request and ends after the request, the duration of the request timeframe will be returned.

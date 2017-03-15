@@ -575,13 +575,68 @@ The above would display "0.2" for host "a". More simply, you template could just
 
 Type: Context-Bound
 
-(TODO: For the above, going to need to explain the way a `result` differs from the `resultValue` (`result[0].Value` technically))
+`.EvalAll` executes the given expression and returns a slice of [ResultSlice](/definitions#resultslice). The type of each results depends on the return type of the expresion. Mostly commonly one uses a an expression that returns a numberSet. If there is an error nil is returned and `.Errors` is appended to.
 
-Execute the given expression and returns the result.
+Example:
+```
+alert evalall {
+    template = evalall
+    # the type returned by the avg() func is a seriesSet
+    $cpu = q("sum:rate{counter,,1}:os.cpu{host=ny-bosun*}", "5m", "")
+    # the type returned by the avg() func is a numberSet
+    $cpu_avg = avg($cpu)
+    warn = 1
+}
 
-(Todo: Document error returns by linking to the error behavior of eval as I believe they are the same)
-
-(TODO: Need to link to possible return types and their structure)
+template evalall {
+    body = `
+    {{ $numberSetResult := .EvalAll .Alert.Vars.cpu_avg }}
+    {{ if notNil $numberSetResult }}
+    <table>
+        <tr>
+            <th>Host</th>
+            <th>Avg CPU Value</th>
+        <tr>
+        {{ range $result := $numberSetResult }}
+            <tr>
+                <!-- Show the value of the host tag key -->
+                <td>{{$result.Group.host}}</td>
+                <!-- Since we know the value of cpu_avg is a numberSet which contains floats.
+                we pipe the float to printf to make it so it only print to two decimal places -->
+                <td>{{$result.Value | printf "%.2f"}}</td>
+            </tr>
+        {{end}}
+    <table>
+    {{ else }}
+        {{ .LastError }}
+    {{ end }}
+    
+    <!-- You could end up with other types, but their usage is not recommended, but to illustrate the point working with a seriesSet is show -->
+    {{ $seriesSetResult := .EvalAll .Alert.Vars.cpu }}
+    {{ if notNil $seriesSetResult }}
+        {{ range $result := $seriesSetResult }}
+            <h2>{{ $result.Group }}</h2>
+            <table>
+                <tr>
+                    <th>Time</th>
+                    <th>Value</th>
+                <tr>
+                <!-- these are *not* sorted -->
+                {{ range $time, $value := $result.Value }}
+                    <tr>
+                        <td>{{ $time }}</td>
+                        <td>{{ $value }}</td>
+                    </tr>
+                {{end}}
+            <table>
+        {{ end }}
+    {{ else }}
+        {{ .LastError }}
+    {{ end }}
+    
+    `
+}
+```
 
 #### .LeftJoin(expression|string|ResultSlice?...) ([][]Result)
 
@@ -1016,38 +1071,7 @@ A tagset is a map of of string to string (`map[string]string` in Go). The keys r
 
 The Value can be of different types. Technically, it is a go `interface{}` with two methods, `Type()` which returns the type of the `Value()` which returns an `interface{}` as well, but will be of the type returned by the `Type()` method.
 
-The most common case of dealing with Results in a ResultSlice is to use the `.EvalAll` func on an expression that would return a NumberSet. The following example shows how you would do that to construct a table.
-
-(TODO: Update this example with error handling)
-
-~~~
-alert example_result_slice {
-    template = example_result_slice
-    # the type returned by the avg() func is a numberSet
-    $cpu_avg = avg(q("sum:rate{counter,,1}:os.cpu{host=ny-bosun*}", "5m", ""))
-    warn = 1
-}
-
-template example_result_slice {
-    body = `
-    <table>
-        <tr>
-            <th>Host</th>
-            <th>Avg CPU Value</th>
-        <tr>
-        {{ range $result := (.EvalAll .Alert.Vars.cpu_avg) }}
-            <tr>
-                <!-- Show the value of the host tag key -->
-                <td>{{$result.Group.host}}</td>
-                <!-- Since we know the value of cpu_avg is a numberSet which contains floats.
-                we pipe the float to printf to make it so it only print to two decimal places -->
-                <td>{{$result.Value | printf "%.2f"}}</td>
-            </tr>
-        {{end}}
-    <table>
-    `
-}
-~~~
+The most common case of dealing with Results in a ResultSlice is to use the `.EvalAll` func on an expression that would return a NumberSet. See the example under [EvalAll](/definitions#evalall)
 
 #### Status 
 The `Status` type is an integer that represents the current severity status of the incident with associated string repsentation. The possible values and their string representation is:
