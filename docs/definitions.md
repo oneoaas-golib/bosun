@@ -1013,7 +1013,24 @@ alert bytes {
 
 Type: Global
 
-(TODO: Document)
+`pct` takes a number, limits it to two decimal places and adds a "%" suffix. It does *not* multiply the number by 100.
+
+Example:
+```
+template pct {
+    body = `
+    <!-- Need to eval to get number type instead of string -->
+    {{ .Eval .Alert.Vars.value | pct }}
+    <!-- result is: 55.56% -->
+    `
+}
+
+alert pct {
+    template = pct
+    $value = 55.55555
+    warn = $value
+}
+```
 
 #### replace(s, old, new string, n int) (string)
 
