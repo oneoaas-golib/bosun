@@ -155,40 +155,6 @@ Querying graphite sent to influx (note the quoting):
 influx("graphite", '''select sum(value) from "df-root_df_complex-free" where env='prod' and node='web' ''', "2h", "1m", "1m")
 ```
 
-## Logstash Query Functions (Deprecated)
-
-The logstash query functions have been deprecated. Trying to create filters from a single parsed string turned out to be too limiting for people's requrements. **The logstash functions work only with pre v2 elastic, and the es functions work only with elastic v2 or later.**
-
-### lscount(indexRoot string, keyString string, filterString string, bucketDuration string, startDuration string, endDuration string) seriesSet
-
-lscount returns a time bucked count of matching log documents.
-
-  * `indexRoot` is the root name of the index to hit, the format is expected to be `fmt.Sprintf("%s-%s", index_root, d.Format("2006.01.02"))`.
-  * `keyString` creates groups (like tagsets) and can also filter those groups. It is the format of `"field:regex,field:regex..."` The `:regex` can be ommited.
-  * `filterString` is an Elastic regexp query that can be applied to any field. It is in the same format as the keystring argument.
-  * `bucketDuration` is in the same format is an opentsdb duration, and is the size of buckets returned (i.e. counts for every 10 minutes).
-  * `startDuration` and `endDuration` set the time window from now - see the OpenTSDB q() function for more details.
-
-**Note:** As of Bosun 0.5.0, the results are no longer normalized per second. This resulted in bad extrapolations, and confusing interactions with functions like `sum(lscount(...))`. The rate will now be per bucket. If you still want the results normalized to per second, you can divide the result by the number of seconds with: `lscount("logstash", "logsource,program:bosun", $bucketDuration, "10m", "") / d($bucketDuration)`
-
-For example:
-
-`lscount("logstash", "logsource,program:bosun", "5s", "10m", "")`
-
-queries the "logstash" named indexes (we autogenerate the date porition of the indexes based on the time frame) and returns a series with groups like `{logsrouce:ny-bosun01, program:bosun}, {logsrouce:ny-bosun02, program:bosun}`. The values of the series will be the count of log entries in 5 second buckets over the last 10 minutes.
-
-### lsstat(indexRoot string, keyString string, filterString string, field string, rStat(avg|min|max|sum|sum_of_squares|variance|std_deviation) string, bucketDuration string, startDuration string, endDuration string) series
-
-lstat returns various summary stats per bucket for the specified `field`. The field must be numeric in elastic. rStat can be one of `avg`, `min`, `max`, `sum`, `sum_of_squares`, `variance`, `std_deviation`. The rest of the fields behave the same as lscount except that there is no division based on `bucketDuration` since these are summary stats.
-
-### Caveats
-  * There is currently no escaping in the keystring, so if you regex needs to have a comma or double quote you are out of luck.
-  * The regexs in keystring are applied twice. First as a regexp filter to elastic, and then as a go regexp to the keys of the result. This is because the value could be an array and you will get groups that should be filtered. This means regex language is the intersection of the golang regex spec and the elastic regex spec.
-  * Elastic uses lucene style regex. This means regexes are always anchored ([see the documentation](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/query-dsl-regexp-query.html#_standard_operators)).
-  * If the type of the field value in Elastic (aka the mapping) is a number then the regexes won't act as a regex. The only thing you can do is an exact match on the number, ie "eventlogid:1234". It is recommended that anything that is a identifier should be stored as a string since they are not numbers even if they are made up entirely of numerals.
-  * As of January 15, 2015 - logstash functionality is new so these functions may change a fair amount based on experience using them in alerts.
-  * Alerts using this information likely want to set ignoreUnknown, since only "groups" that appear in the time frame are in the results.
-
 ## Elastic Query Functions
 
 Elasitc replaces the deprecated logstash (ls) functions. It only works with Elastic v2+. It is meant to be able to work with any elastic documents that have a time field and not just logstash. It introduces two new types to allow for greater flexibility in querying. The ESIndexer type generates index names to query (based on the date range). There are now different functions to generate indexers for people with different configurations. The ESQuery type is generates elastic queries so you can filter your results. By making these new types, new Indexers and Elastic queries can be added over time.
