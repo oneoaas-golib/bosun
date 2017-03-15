@@ -850,17 +850,49 @@ alert httppost {
 }
 ```
 
-#### .ESQuery(indexRoot expr.ESIndexer, filter expr.ESQuery, sduration, eduration string, size int) (interface{})
+#### .ESQuery(indexRoot expr.ESIndexer, filter expr.ESQuery, sduration, eduration string, size int) ([]interface{})
 
 Type: Context-Bound
 
-(TODO: Document, and figure out what the return type can be)
+`.ESQuery` returns a slice of elastic documents. The function behaves like the escount and esstat [elastic expression functions](/expressions#elastic-query-functions) but returns documents instead of statistics about those documents. The number of documents is limited to the provided size argument. Each item in the slice is the a document that has been marshaled to a golang interface{}. This means the contents are dynamic like elastic documents. If there is an error, than nil is returned and `.Errors` is appended to. 
+
+The group (aka tags) of the alert is used to further filter the results. This is implemented by taking each key/value pair in the alert, and adding them as an [elastic term query](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-term-query.html).
+
+Example:
+```
+template esquery {
+    body = `
+        {{ $filter := (.Eval .Alert.Vars.filter)}}
+        {{ $index := (.Eval .Alert.Vars.index)}}
+        {{ $esResult := .ESQuery $index $filter "5m" "" 10 }}
+        {{ if notNil $esResult }}
+            {{ range $row := $esResult }}
+                <p>{{ range $key, $value := $row }}
+                    <!-- Show the Key, Value, and the Type of the value. Values could be objects
+                    but dereferencing their properties if they don't exist could cause the template
+                    to fail to render -->
+                    {{ $key }}: {{ $value }} ({{ $value | printf "%T" }}),
+                {{ end }}<p> 
+            {{ end }}
+        {{ else }}
+            <p>{{ .LastError }}
+        {{end}}
+    `
+}
+
+alert esquery {
+    template = esquery
+    $index = esls("logstash")
+    $filter = esregexp("logsource", "ny-.*")
+    crit = avg(escount($index, "logsource", $filter, "2m", "10m", ""))
+}
+```
 
 #### .ESQueryAll(indexRoot expr.ESIndexer, filter expr.ESQuery, sduration, eduration string, size int) (interface{})
 
 Type: Context-Bound
 
-(TODO: Document, and figure out what the return type can be)
+`.ESQueryAll` behaves just like `.ESQuery`, but the tag filtering to filter results to match the alert instance is *not* applied.
 
 #### .Group() (TagSet)
 A map of tags keys to their corresponding values for the alert.
