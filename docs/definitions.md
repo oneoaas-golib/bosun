@@ -1065,7 +1065,21 @@ Type: Global
 
 Type: Global
 
-(TODO: Document)
+`html` takes a string and makes it part of the template. This allows you to inject HTML from variables set in the alert definition. A use case for this is when you have many alerts that share a template and fields you have standardized. For example, you might have a `$notes` variable that you attach to all alerts. This way when filling out the notes for an alert, you can include things like HTML links.
+
+Example:
+```
+template htmlFunc {
+    body = `All our templates always show the notes: <!-- the following will be rendered as subscript -->
+    {{ .Alert.Vars.notes | html }}`
+}
+
+alert htmlFunc {
+    template = htmlFunc
+    $notes = <sub>I'm ashmaed about the reason for this alert so this is in subscript...</sub>. In truth, the solution to this alert is the solution to all technical problems, go ask on <a href="https://stackoverflow.com" target="blank">StackOverflow</a>
+    warn = 1 
+}
+```
 
 #### parseDuration(string) (*time.Duration)
 
