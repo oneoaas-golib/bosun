@@ -833,7 +833,22 @@ Type: Context-Bound
 
 Type: Context-Bound
 
-(TODO: Document)
+`.HTTPPost` sends a HTTP POST request to the specified url. The data is provided a string, and bodyType will set the Content-Type HTTP header. It will return the response or error as a string in the same way that `.HTTPGet` behaves. 
+
+Example:
+
+```
+template httppost {
+    body = `
+    {{ .HTTPPost "http://localhost:9090" "application/json" "{ \"Foo\": \"bar\" }" }}
+    `
+}
+
+alert httppost {
+    template = httppost
+    warn = 1
+}
+```
 
 #### .ESQuery(indexRoot expr.ESIndexer, filter expr.ESQuery, sduration, eduration string, size int) (interface{})
 
@@ -848,11 +863,11 @@ Type: Context-Bound
 (TODO: Document, and figure out what the return type can be)
 
 #### .Group() (TagSet)
-A map of tags and their corresponding values for the alert. (TODO: Add Example) 
+A map of tags keys to their corresponding values for the alert.
 
 #### .Last() (string)
 
-The last Event in the `.History` array. (TODO: Link to Event type)
+The most recent [Event](/definitions#event) in the `.History` array.
 
 #### .LastError() (string)
 
