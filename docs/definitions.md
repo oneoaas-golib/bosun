@@ -46,6 +46,7 @@ The minimum requirement for an alert is that it have a `warn` or `crit` expresio
 ### Alert Keywords
 
 #### warn
+{: .keyword}
 The expression to evaluate to set a warn state for an incident that is instantiated from the alert definition. 
 
 The expression must evaluate to a NumberSet or a Scalar (See [Data Types](expressions#data-types)). 0 is false (do not trigger) and any non-zero value is true (will trigger). 
@@ -55,6 +56,7 @@ If the crit expression is true, the warn expression will not be evaluated as cri
 No warn notifications will be sent if `warnNotification` is not declared in the alert definition. It will still however appear on the dashboard.
 
 #### crit
+{: .keyword}
 The expression to evaluate to set a critical state for an incident that is instantiated from the alert definition.
 
 As with warn, the expression must return a Scalar or NumberSet. 
@@ -62,18 +64,23 @@ As with warn, the expression must return a Scalar or NumberSet.
 No crit notifications will be sent if `critNotification` is not declared in the alert definition. It will still appear on the dashboard.
 
 #### critNotification
+{: .keyword}
 Comma-separated list of notifications to trigger on critical a state (when the crit expression is non-zero). This line may appear multiple times and duplicate notifications, which will be merged so only one of each notification is triggered. Lookup tables may be used when `lookup("table", "key")` is an entire `critNotification` value. (TODO: Link to notification lookups).
 
 #### warnNotification
+{: .keyword}
 Identical to `critNotification` above, but the condition evaluates to warning state.
 
 #### template
+{: .keyword}
 The name of the template that will be used to send alerts to the specified notifications for the alert.
 
 #### runEvery
+{: .keyword}
 Multiple of global system configuration value `checkFrequency` at which to run this alert. If unspecified, the global system configuration value `defaultRunEvery` will be used.
 
 #### squelch
+{: .keyword}
 Squelch (TODO Link to squelch detail) is comma-separated list of `tagk=tagv` pairs. `tagv` is a regex. If the current tag group matches all values, the alert is squelched, and will not trigger as crit or warn. For example, `squelch = host=ny-web.*,tier=prod` will match any group that has at least that host and tier. Note that the group may have other tags assigned to it, but since all elements of the squelch list were met, it is considered a match. Multiple squelch lines may appear; a tag group matches if any of the squelch lines match.
 
 This can also be defined at the global of level of the configuration. 
@@ -81,23 +88,29 @@ This can also be defined at the global of level of the configuration.
 When using squelch, alerts will be removed even if they are not with-in the scope of the final tagset. The common case of this would be using the `t` (tranpose function) to reduce the number of final results. So when doing this, results will still be remove because they are removed at the expression level for the `warn` and `crit` expressions.
 
 #### unknown
+{: .keyword}
 unknown is the time at which to mark an incident unknown (TODO: Link to details of unknown) if it can not be evaluated. It defaults the system configuration global variable `checkFrequency`.
 
 #### ignoreUnknown
+{: .keyword}
 Setting `ignoreUnknown = true`, will prevent an alert from becoming unknown. This is often used where you expect the tagsets or data for an alert to be sparse and/or you want to ignore things that stop sending information. 
 
 #### unknownIsNormal
+{: .keyword}
 Setting `unknownIsNormal = true` will convert unknown events for an incident into a normal event.
 
 This is often useful if you are alerting on log messages where the absence of log messages means that the state should go back to normal. Using `ignoreUnknown` with this setting would be unnecessary.
 
 #### unjoinedOk
+{: .keyword}
 If present, will ignore unjoined expression errors. Unjoins happen when expressions with in an alert use a comparison operator, and there are tagsets in one set but are not in the other set.
 
 #### log
+{: .keyword}
 Setting `log = true` will make the alert behave as a "log alert". It will never show up on the dashboard, but will execute notifications every check interval where the status is abnormal.
 
 #### maxLogFrequency
+{: .keyword}
 Setting `maxLogFrequency = true` will throttle log notifications to the specified duration. `maxLogFrequency = 5m` will ensure that notifications only fire once every 5 minutes for any given alert key. Only valid on alerts that have `log = true`.
 
 ## Variables 
@@ -125,9 +138,11 @@ Note that templates are rendered when the expression is evaluated and it is non-
 ### Template Keywords
 
 #### body
+{: .keyword}
 The message body. This is formated in HTML (TODO: Unless What? I think always currently, maybe I should link to issue)
 
 #### subject
+{: .keyword}
 The subject of the template. This is also the text that will be used in the dashboard for triggered incidents. The format of the subject is plaintext.
 
 ### Template Variables
@@ -253,21 +268,27 @@ template vars {
 ```
 
 #### .Attachments
+{: .var}
 When the graph functions that generate images are used they are added to `.Attachments`. Although it is available, you should *not* need to access this variable from templates. It is a slice of pointers to Attachment objects. An attachment has three fields, Data (a byte slice), Filename (string), and ContentType string. 
 
 #### .Id
+{: .var}
 `.Id` is a unique number that identifies an incident in Bosun. It is an int64, see (TODO: link to usage: liftime of an incident).
 
 #### .Start
+{: .var}
 `.Start` is the the time the incident started and a Golang time.Time object. This means you can work with the time object if you need to, but a simple `{{ .Start }}` will print the time in 
 
 #### .AlertKey
+{: .var}
 `.AlertKey` is a string representation of the alert key. The alert key is in the format alertname{tagset}. For example `diskused{host=ny-bosun01,disk=/}`.
 
 #### .Tags
+{: .var}
 `.Tags` is a string representation of the tags for the alert. It is in the format of tagkey=tagvalue,tag=tagvalue. For example `host=ny-bosun01,disk=/`
 
 #### .Result
+{: .var}
 `.Result` is a pointer to a "result object". This is *not* the same as the [result object](/definitions#result-1) i.e. the object return by `.Eval`. Rather is has the following properties:
 
     * Value: The number returned by the expression (technically a float64)
@@ -295,6 +316,7 @@ alert result {
 ```
 
 #### .Actions
+{: .var}
 `.Actions` is a slice of of [action objects](/definitions#action) of actions taken on the incident. They are ordered by time from past to recent. This list will be empty when using Bosun's testing UI.
 
 Example:
@@ -319,27 +341,35 @@ Example:
 ```
 
 #### .Subject
+{: .var}
 `.Subject` is the rendered subject field of the template as a string. It is only available in the body, and does not show up via Bosun's testing UI.
 
 #### .NeedAck
+{: .var}
 `.NeedAck` is a boolean value that is true if the alert has not been acknowledged yet.
 
-#### .Unevaulated 
+#### .Unevaulated
+{: .var}
 `.Unevaluated` is a boolean value that is true if the alert did not trigger because of a dependency. This field would only show true when viewed on the dashboard.
 
 #### .CurrentStatus
+{: .var}
 `.CurrentStatus` is a [status object](/definitions#status) representing the current severity state of the incident. This will be "none" when using Bosun's testing UI.
 
 #### .WorstStatus
+{: .var}
 `.WorstStatus` is a [status object](/definitions#status) representing the highest severity reached in the lifetime of the incident. This will be "none" when using Bosun's testing UI.
 
 #### .LastAbnormalStatus
+{: .var}
 `.LastAbnormalStatus` is a [status object](/definitions#status) representing the the most recent non-normal severity for the incident. This will be "none" when using Bosun's testing UI.
 
 #### .LastAbnormalTime
+{: .var}
 `.LastAbnormalTime` is an int64 representing the time of `.LastAbnormalStatus`. This is not a time.Time object, but rather a unix epoch. This will be 0 when using Bosun's testing UI.
 
 #### .Alert.Text
+{: .var}
 `.Alert.Text` is the raw text of the alert definition as a string. It includes comments:
 
 ```
@@ -355,6 +385,7 @@ alert text {
 ```
 
 #### .Alert.Vars
+{: .var}
 `.Alert.Vars` is a map of string to string. Any variables declared in the alert definition get an entry in the map. The key is name of the variable without the dollar sign prefix, and the value is the text that the variable maps to (Variables in Bosun don't story values, and are just simple text replacement.) It the variable does not exist than an empty string will be returned. Global variables are only accessible via a mapping in the alert definition as show in the example below.
 
 Example:
@@ -386,9 +417,11 @@ alert alert.vars {
 ```
 
 #### .Alert.Name
+{: .var}
 `.Alert.Name` holds the the name of the alert. For example for an alert defined `alert myAlert { ... }` the value would be myAlert.
 
 #### .Alert.Crit
+{: .var}
 `.Alert.Crit` is a [bosun expression object](/definitions#expr) that maps to the crit expression in the alert. It is only meant to be used to display the expression, or run the expression by passing it to functions like `.Eval`.
 
 Example:
@@ -412,43 +445,57 @@ alert expr {
 ```
 
 #### .Alert.Warn
+{: .var}
 Like `.Alert.Crit` but the crit expression.
 
 #### .Alert.Depends
+{: .var}
 Like `.Alert.Crit` but the depends expression.
 
 #### .Alert.CritNotification
+{: .var}
 
 #### .Alert.WarnNotification
+{: .var}
 
 #### .Alert.Unknown
+{: .var}
 `.Alert.Unknown` is a time.Duration that is the duration for unknowns if set to override the global duration.  It will be zero if the alert is using the global setting.
 
 #### .Alert.MaxLogFrequency
+{: .var}
 `.Alert.MaxLogFrequency` is a time.Durtion that shows the alert setting for a Log Alert that determines how often a log alert should send its notification.
 
 #### .Alert.IgnoreUnknown
+{: .var}
 `.Alert.IgnoreUnknown` is a bool that will be true if ignoreunknown is set on the alert.
 
 #### .Alert.UnknownsNormal
+{: .var}
 `.Alert.UnknownsNormal` is a bool that is true of the unknowns normal setting is true. This means unknown events will be treated as normal events.
 
 #### .Alert.UnjoinedOK
+{: .var}
 `.Alert.UnjoinedOk` is a bool that is true of the unjoinedOK is set to true on the alert. This makes it so when doing operations with two sets, if there are items in one set that have no match they will be ignored instead of triggering an error.
 
 #### .Alert.Log
+{: .var}
 `.Alert.Log` is a bool that is true if this is a log style alert.
 
 #### .Alert.RunEvery
+{: .var}
 `.Alert.RunEvery` is an int that shows an override for how often the alert should run. It is a multiplper that overrides how many check intervals exist between each run.
 
 #### .Alert.TemplateName
+{: .var}
 `.Alert.TemplateName` is the name of the template that the alert is configured to use.
 
 #### .Expr 
+{: .var}
 The value of `.Expr` is the warn or crit expression that was used to evaluate the alert in the format of a string.
 
 #### .Events
+{: .var}
 The value of `.Events` is a slice of [Event](/definitions#event) objects.
 
 Example:  
@@ -480,9 +527,11 @@ template test {
 ```
 
 #### .IsEmail
+{: .var}
 The value of is `IsEmail` is true if the template is being rendered for an email. This allows you to use the same template for different types of notifications conditionally within the template.
 
 #### .Errors
+{: .var}
 A slice of strings that gets appended to when a context bound function returns an error. 
 
 ### Template Function Types
@@ -542,7 +591,7 @@ See the examples in the functions that follow to see examples of Error handling.
 (TODO: Sort these when done)
 
 #### .Eval(string|Expression|ResultSlice) (resultValue)
-
+{: .func}
 Type: Context-Bound
 
 (TODO: Understand the Resultslice argument. I think it might be so that Eval can be passed as arguments to other eval (TODO: include an example of this))
@@ -575,7 +624,7 @@ template eval {
 The above would display "0.2" for host "a". More simply, you template could just be `{{.Eval .Alert.Vars.r}}` and it would display 0.2 assuming there are no errors.
 
 #### .EvalAll(string|Expression|ResultSlice) (Result)
-
+{: .func}
 Type: Context-Bound
 
 `.EvalAll` executes the given expression and returns a slice of [ResultSlice](/definitions#resultslice). The type of each results depends on the return type of the expresion. Mostly commonly one uses a an expression that returns a numberSet. If there is an error nil is returned and `.Errors` is appended to.
@@ -643,6 +692,7 @@ template evalall {
 ```
 
 #### .LeftJoin(expression|string|ResultSlice?...) ([][]Result)
+{: .func}
 
 Type: Context-Bound
 
@@ -715,18 +765,21 @@ template leftjoin {
 ```
 
 #### .Ack() (string)
+{: .func}
 
 Type: Context-Bound
 
 `.Ack` creates a link to Bosun's view for alert acknowledgement. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
 
 #### .Incident() (string)
+{: .func}
 
 Type: Context-Bound
 
 `.Incident` creates a link to Bosun's incident view. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link.
 
 #### .GraphLink(string) (string)
+{: .func}
 
 Type: Context-Bound
 
@@ -734,6 +787,7 @@ Type: Context-Bound
 
 
 #### .Graph(string|Expression|ResultSlice(TODO: Not sure this can take a result slice?)) (image)
+{: .func}
 
 Type: Context-Bound
 
@@ -761,12 +815,14 @@ template graph {
 ```
 
 #### .GraphAll(string|Expression|ResultSlice) (image)
+{: .func}
 
 Type: Context-Bound
 
 `.GraphAll` behaves exactly like `.Graph` but does not filter results to match the tagset of the alert. So if you changed the call in the example for `.Graph` to be `.GraphAll`, in an alert about `host=a` the series for both host a and host b would displayed (unlike Graph where only the series for host a would be displayed). 
 
 #### .GetMeta(metric, key string, tags string|TagSet) (object|string)
+{: .func}
 
 Type: Context-Bound
 
@@ -863,6 +919,7 @@ template meta {
 ```
 
 #### .HTTPGet(url string) string
+{: .func}
 
 Type: Context-Bound
 
@@ -884,12 +941,14 @@ alert httpget {
 ```
 
 #### .HTTPGetJSON(url string) (*jsonq.JsonQuery)
+{: .func}
 
 Type: Context-Bound
 
 (TODO: Document, link to jsonq library and how to work with objects. Note limitation about top level object being an array)
 
 #### .HTTPPost(url, bodyType, data string) (string)
+{: .func}
 
 Type: Context-Bound
 
@@ -911,6 +970,7 @@ alert httppost {
 ```
 
 #### .ESQuery(indexRoot expr.ESIndexer, filter expr.ESQuery, sduration, eduration string, size int) ([]interface{})
+{: .func}
 
 Type: Context-Bound
 
@@ -950,48 +1010,56 @@ alert esquery {
 ```
 
 #### .ESQueryAll(indexRoot expr.ESIndexer, filter expr.ESQuery, sduration, eduration string, size int) (interface{})
+{: .func}
 
 Type: Context-Bound
 
 `.ESQueryAll` behaves just like `.ESQuery`, but the tag filtering to filter results to match the alert instance is *not* applied.
 
 #### .Group() (TagSet)
+{: .func}
 
 Type: Context-Bound
 
 A map of tags keys to their corresponding values for the alert.
 
 #### .Last() (string)
+{: .func}
 
 Type: Context-Bound
 
 The most recent [Event](/definitions#event) in the `.History` array.
 
 #### .LastError() (string)
+{: .func}
 
 Type: Context-Bound
 
 Returns the string representation of the last Error, or an empty string if there are no errors. This only contains errors from context-bound functions. 
 
 #### .Lookup(table string, key string) (string)
+{: .func}
 
 Type: Context-Bound
 
 (TODO: Document + Example, also does this use search or is it like lookup series?)
 
 #### .LookupAll(table string, key string) (string)
+{: .func}
 
 Type: Context-Bound
 
 (TODO: Document + Example, also does this use search or is it like lookup series?)
 
 #### notNil(value) (bool)
+{: .func}
 
 Type: Global
 
 `notNil` returns true if the value is nil. This is only meant to be used with error checking on context-bound functions.
 
 #### bytes(string|int|float) (string)
+{: .func}
 
 Type: Global
 
@@ -1017,6 +1085,7 @@ alert bytes {
 ```
 
 #### pct(number) (string)
+{: .func}
 
 Type: Global
 
@@ -1041,6 +1110,7 @@ alert pct {
 ```
 
 #### replace(s, old, new string, n int) (string)
+{: .func}
 
 Type: Global
 
@@ -1065,12 +1135,14 @@ alert replace {
 ```
 
 #### short(string) (string)
+{: .func}
 
 Type: Global
 
 `short` Trims the string to everything before the first period. Useful for turning a FQDN into a shortname. For example: `{{short "foo.baz.com"}}` in a template will return `foo`
 
 #### html(string) (htemplate.HTML)
+{: .func}
 
 Type: Global
 
@@ -1092,13 +1164,14 @@ alert htmlFunc {
 ```
 
 #### parseDuration(string) (*time.Duration)
+{: .func}
 
 Type: Global
 
 `parseDuration` maps to Golang's [time.ParseDuration](http://golang.org/pkg/time/#ParseDuration). It returns a pointer to a time.Duration. If there is an error nil will be returned. Unfortunately the error message for this particular can not be seen.
 
 Example:
- 
+
 ```
 template parseDuration {
     body = `
@@ -1134,6 +1207,8 @@ An Action is an object that represents actions that people do on an incident. It
    * 6: "Note"
 
 #### Event
+{: .type}
+
 An Event represent a change in the [severity state](/usage#severity-states) within the [duration of an incident](/usage#the-lifetime-of-an-incident). When an incident triggers, it will have at least one event.  An Event contains the following fields
 
  * **Warn**: A pointer to an [Event Result](definitions#event-result) that the warn expression generated if the event has a warning status.
@@ -1147,6 +1222,8 @@ It is important to note that the `Warn` and `Crit` fields are pointers. So if th
  See the example under the [Events template variable](/definitions#events) to see how to use events inside a template.
 
 #### Event Result 
+{: .type}
+
 An Event Result (note: in the code this is actually a models.Result) has two properties:
 
 * **Expr**: A string representation of the full expression used to generate the value of the Result's Value.
@@ -1155,12 +1232,18 @@ An Event Result (note: in the code this is actually a models.Result) has two pro
 There is a third property **Computations**. But it is not recommended that you access it even though it is available and it will not be documented.
 
 ### Expr
+{: .type}
+
 A `.Expr` is a bosun expression. Although various properties and methods are attached to it, it should only be used for printing (to see the underlying text) and for passing it to function that evaluate expressions such as `.Eval` within templates.
 
 #### ResultSlice
+{: .type}
+
 A `ResultSlice` is returned by using the `.EvalAll` function. It is a slice of pointers to `Result` objects. Each result represents the an item in the set when the type is something like a NumberSet or a SeriesSet.
 
 #### Result
+{: .type}
+
 A `Result` as two fields:
 
  1. **Group**: The Group is the TagSet of the result. 
@@ -1173,6 +1256,8 @@ The Value can be of different types. Technically, it is a go `interface{}` with 
 The most common case of dealing with Results in a ResultSlice is to use the `.EvalAll` func on an expression that would return a NumberSet. See the example under [EvalAll](/definitions#evalall)
 
 #### Status 
+{: .type}
+
 The `Status` type is an integer that represents the current severity status of the incident with associated string repsentation. The possible values and their string representation is:
 
  * 0 for "none"
