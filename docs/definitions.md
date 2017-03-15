@@ -1036,13 +1036,30 @@ alert pct {
 
 Type: Global
 
-(TODO: Document - can just take from golang string's replace mostly)
+`replace` maps to golang's [strings.Replace](http://golang.org/pkg/strings/#Replace) function. Which states:
+
+> Replace returns a copy of the string s with the first n non-overlapping instances of old replaced by new. If old is empty, it matches at the beginning of the string and after each UTF-8 sequence, yielding up to k+1 replacements for a k-rune string. If n < 0, there is no limit on the number of replacements
+
+Example:
+```
+template replace {
+    body = `
+    {{ replace "Foo.Bar.Baz" "." " " -1 }}
+    <!-- result is: Foo Bar Baz -->
+    `
+}
+
+alert replace {
+    template = replace
+    warn = 1
+}
+```
 
 #### short(string) (string)
 
 Type: Global
 
-(TODO: Document)
+`short` Trims the string to everything before the first period. Useful for turning a FQDN into a shortname. For example: `{{short "foo.baz.com"}}` in a template will return `foo`
 
 #### html(string) (htemplate.HTML)
 
@@ -1054,7 +1071,24 @@ Type: Global
 
 Type: Global
 
-(TODO: Document)
+`parseDuration` maps to Golang's [time.ParseDuration](http://golang.org/pkg/time/#ParseDuration). It returns a pointer to a time.Duration. If there is an error nil will be returned. Unfortunately the error message for this particular can not be seen.
+
+Example: 
+```
+template parseDuration {
+    body = `
+        <!-- More commonly you would use .Last.Time.Add , but .Last does not function in the testing interface -->
+        Doomsday: {{ .Start.Add (parseDuration (.Eval .Alert.Vars.secondsUntilDoom | printf "%fs"))}}
+        <!-- result is: Doomsday: 2021-02-11 15:11:06.727332631 +0000 UTC -->
+    `
+}
+
+alert parseDuration {
+    template = parseDuration
+    $secondsUntilDoom = 123453245
+    warn = $secondsUntilDoom
+} 
+```
 
 ### Types available in Templates
 Since templating is based on Go's template language, certain types will be returned. Understanding these types can help you construct richer alert notifications.
