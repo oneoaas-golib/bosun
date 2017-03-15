@@ -1192,6 +1192,8 @@ alert parseDuration {
 Since templating is based on Go's template language, certain types will be returned. Understanding these types can help you construct richer alert notifications.
 
 #### Action
+{: .type}
+
 An Action is an object that represents actions that people do on an incident. It has the following fields:
 
  * User: a string of the username for the person that took the action
