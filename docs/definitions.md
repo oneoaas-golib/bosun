@@ -298,6 +298,7 @@ alert result {
 `.Actions` is a slice of of [action objects](/definitions#action) of actions taken on the incident. They are ordered by time from past to recent. This list will be empty when using Bosun's testing UI.
 
 Example:
+
 ```
 <table>
     <tr>
@@ -356,8 +357,9 @@ alert text {
 #### .Alert.Vars
 `.Alert.Vars` is a map of string to string. Any variables declared in the alert definition get an entry in the map. The key is name of the variable without the dollar sign prefix, and the value is the text that the variable maps to (Variables in Bosun don't story values, and are just simple text replacement.) It the variable does not exist than an empty string will be returned. Global variables are only accessible via a mapping in the alert definition as show in the example below.
 
-```
 Example:
+
+```
 $aGlobalVar = "Hiya"
 
 template alert.vars {
@@ -390,6 +392,7 @@ alert alert.vars {
 `.Alert.Crit` is a [bosun expression object](/definitions#expr) that maps to the crit expression in the alert. It is only meant to be used to display the expression, or run the expression by passing it to functions like `.Eval`.
 
 Example:
+
 ```
 template expr {
     body = `
@@ -450,7 +453,7 @@ The value of `.Events` is a slice of [Event](/definitions#event) objects.
 
 Example:  
 
-~~~
+```
 template test {
     body = `
     <table>
@@ -474,7 +477,7 @@ template test {
     </table>
     `
 }
-~~~
+```
 
 #### .IsEmail
 The value of is `IsEmail` is true if the template is being rendered for an email. This allows you to use the same template for different types of notifications conditionally within the template.
@@ -488,7 +491,7 @@ Template functions come in two types. Functions that are global, and context-bou
 #### Global
 Calling global functions is simple. The syntax is just the function name and arguments. I can be used in regular format or a chained pipe format.
 
-~~~
+```
 template global_type_example {
     body = `
         <!-- Regular Format -->
@@ -497,7 +500,7 @@ template global_type_example {
         {{ 12312313 | bytes }}
     `
 }
-~~~
+```
 
 #### Context Bound
 Context bound functions, like Global functions, can be called in regular or pipe format. What makes them different is the syntax used to call them. Context bound functions have a period before them, such as `{{ .Eval }}`. Essentially they are methods on that act on the instance of an alert/template combination when it is rendered and perform queries.
@@ -506,7 +509,7 @@ They are bound to the parent context. The "parent context" is essentially the to
 
 What this practically means, is that when you are inside a block within a template (for example, inside a range look) context-bound functions need to be called with `{{ $.Func }}` to reference the parent context.
 
-~~~
+```
 template context_bound_type_example {
     body = `
         <!-- Context Bound at top level -->
@@ -518,7 +521,7 @@ template context_bound_type_example {
         {{ end }}
     `
 }
-~~~
+```
 
 ### Template Error handling
 Templates can throw errors at runtime (i.e. when a notification is sent). Although the configuration check makes sure that templates are valid, you can still do things like try to dereference objects that are nil pointers.
@@ -578,6 +581,7 @@ Type: Context-Bound
 `.EvalAll` executes the given expression and returns a slice of [ResultSlice](/definitions#resultslice). The type of each results depends on the return type of the expresion. Mostly commonly one uses a an expression that returns a numberSet. If there is an error nil is returned and `.Errors` is appended to.
 
 Example:
+
 ```
 alert evalall {
     template = evalall
@@ -784,6 +788,7 @@ For Tag metadata, metadata is returned that includes the key/value pairs provide
 
 
 Example:
+
 ```
 
 alert meta {
@@ -914,6 +919,7 @@ Type: Context-Bound
 The group (aka tags) of the alert is used to further filter the results. This is implemented by taking each key/value pair in the alert, and adding them as an [elastic term query](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-term-query.html).
 
 Example:
+
 ```
 template esquery {
     body = `
@@ -992,6 +998,7 @@ Type: Global
 `bytes` converts a number of bytes into a human readable number with a postfix (such as KB or MB). Conversions are base ten and not base two.
 
 Example:
+
 ```
 template bytes {
     body = `
@@ -1016,6 +1023,7 @@ Type: Global
 `pct` takes a number, limits it to two decimal places and adds a "%" suffix. It does *not* multiply the number by 100.
 
 Example:
+
 ```
 template pct {
     body = `
@@ -1041,6 +1049,7 @@ Type: Global
 > Replace returns a copy of the string s with the first n non-overlapping instances of old replaced by new. If old is empty, it matches at the beginning of the string and after each UTF-8 sequence, yielding up to k+1 replacements for a k-rune string. If n < 0, there is no limit on the number of replacements
 
 Example:
+
 ```
 template replace {
     body = `
@@ -1068,6 +1077,7 @@ Type: Global
 `html` takes a string and makes it part of the template. This allows you to inject HTML from variables set in the alert definition. A use case for this is when you have many alerts that share a template and fields you have standardized. For example, you might have a `$notes` variable that you attach to all alerts. This way when filling out the notes for an alert, you can include things like HTML links.
 
 Example:
+
 ```
 template htmlFunc {
     body = `All our templates always show the notes: <!-- the following will be rendered as subscript -->
@@ -1087,7 +1097,8 @@ Type: Global
 
 `parseDuration` maps to Golang's [time.ParseDuration](http://golang.org/pkg/time/#ParseDuration). It returns a pointer to a time.Duration. If there is an error nil will be returned. Unfortunately the error message for this particular can not be seen.
 
-Example: 
+Example:
+ 
 ```
 template parseDuration {
     body = `
