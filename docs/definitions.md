@@ -950,9 +950,14 @@ Type: Context-Bound
 `.ESQueryAll` behaves just like `.ESQuery`, but the tag filtering to filter results to match the alert instance is *not* applied.
 
 #### .Group() (TagSet)
+
+Type: Context-Bound
+
 A map of tags keys to their corresponding values for the alert.
 
 #### .Last() (string)
+
+Type: Context-Bound
 
 The most recent [Event](/definitions#event) in the `.History` array.
 
@@ -960,7 +965,7 @@ The most recent [Event](/definitions#event) in the `.History` array.
 
 Type: Context-Bound
 
-Returns the string representation of the last Error, or an empty string if there are no errors. 
+Returns the string representation of the last Error, or an empty string if there are no errors. This only contains errors from context-bound functions. 
 
 #### .Lookup(table string, key string) (string)
 
@@ -978,13 +983,31 @@ Type: Context-Bound
 
 Type: Global
 
-notNil returns true if the value is nil. This is only meant to be used with error checking on Context-Bound functions
+`notNil` returns true if the value is nil. This is only meant to be used with error checking on context-bound functions.
 
 #### bytes(string|int|float) (string)
 
 Type: Global
 
-(TODO: Document)
+`bytes` converts a number of bytes into a human readable number with a postfix (such as KB or MB). Conversions are base ten and not base two.
+
+Example:
+```
+template bytes {
+    body = `
+        <!-- bytes uses base ten, *not* base two -->
+        {{ .Alert.Vars.ten | bytes }},{{ .Alert.Vars.two | bytes }}
+        <!-- results are 97.66KB,1000.00KB -->
+    `
+}
+
+alert bytes {
+    template = bytes
+    $ten = 100000
+    $two = 1024000
+    warn = $ten
+}
+```
 
 #### pct(number) (string)
 
