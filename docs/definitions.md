@@ -1256,19 +1256,29 @@ alert parseDuration {
 
 Type: Global
 
-The `V` func allows you to access [global variables](/definitions#global-variables) from within templates.
+The `V` func allows you to access [global variables](/definitions#global-variables) from within templates. This does not recognize variables defined in alerts.
 
 Example:
 
 ```
 $myGlobalVar = Kon'nichiwa
+$overRide = I shall be seen
 
 template globalvar {
-    body = `{{ V "$myGlobalVar" }}`
+    body = `
+    <p>{{ V "$myGlobalVar" }}</p>
+    <!-- renders to Kon'nichiwa -->
+    <p>{{ .Alert.Vars.myGlobalVar }}</p>
+    <!-- renders an empty string -->
+    <p>{{ V "$overRide" }}</p>
+    <!-- render to "I shall be seen" since expression variable overrides do *not* work in templates -->
+    
+`
 }
 
 alert globalvar {
     template = globalvar
+    $overRide = I am not seen
     warn = 1
 }
 ```
