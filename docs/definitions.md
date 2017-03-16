@@ -746,7 +746,7 @@ template evalall {
 }
 ```
 
-#### .LeftJoin(expression|string|ResultSlice?...) ([][]Result)
+#### .LeftJoin(expression|string) ([][]Result)
 {: .func}
 
 Type: Context-Bound
@@ -1251,6 +1251,28 @@ alert parseDuration {
 } 
 ```
 
+#### V(string) (string)
+{: .func}
+
+Type: Global
+
+The `V` func allows you to access [global variables](/definitions#global-variables) from within templates.
+
+Example:
+
+```
+$myGlobalVar = Kon'nichiwa
+
+template globalvar {
+    body = `{{ V "$myGlobalVar" }}`
+}
+
+alert globalvar {
+    template = globalvar
+    warn = 1
+}
+```
+
 ### Types available in Templates
 Since templating is based on Go's template language, certain types will be returned. Understanding these types can help you construct richer alert notifications.
 
@@ -1296,7 +1318,7 @@ An Event Result (note: in the code this is actually a models.Result) has two pro
 
 There is a third property **Computations**. But it is not recommended that you access it even though it is available and it will not be documented.
 
-### Expr
+#### Expr
 {: .type}
 
 A `.Expr` is a bosun expression. Although various properties and methods are attached to it, it should only be used for printing (to see the underlying text) and for passing it to function that evaluate expressions such as `.Eval` within templates.
