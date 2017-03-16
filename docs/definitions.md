@@ -203,7 +203,7 @@ The message body. This is always formated as HTML.
 The subject of the template. This is also the text that will be used in the dashboard for triggered incidents. The format of the subject is plaintext.
 
 ### Template Variables
-Template variables hold information specific to the instance of an alert. They are bound to the template's root context. That means that when you reference them in a block they need to be referenced differently just like context bound functions (TODO: link to function section explaining this).
+Template variables hold information specific to the instance of an alert. They are bound to the template's root context. That means that when you reference them in a block they need to be referenced differently just like context bound functions ([see template function types](/definitions#template-function-types))
 
 #### Example of template variables
 This example shows examples of the template variables documented below that are simple enough to be in a table:
@@ -330,7 +330,7 @@ When the graph functions that generate images are used they are added to `.Attac
 
 #### .Id
 {: .var}
-`.Id` is a unique number that identifies an incident in Bosun. It is an int64, see (TODO: link to usage: liftime of an incident).
+`.Id` is a unique number that identifies an incident in Bosun. It is an int64, see the documentation on the [lifetime of an incident](/usage#the-lifetime-of-an-incident) to understand when new incidents are created.
 
 #### .Start
 {: .var}
@@ -592,7 +592,7 @@ The value of is `IsEmail` is true if the template is being rendered for an email
 A slice of strings that gets appended to when a context bound function returns an error. 
 
 ### Template Function Types
-Template functions come in two types. Functions that are global, and context-bound functions. Unfortunately, it is important to understand the difference because they are called differently in functions and have different behavior in regards to error handling (TODO: link to error handling section)
+Template functions come in two types. Functions that are global, and context-bound functions. Unfortunately, it is important to understand the difference because they are called differently in functions and have different behavior in regards to [error handling](/definitions#template-error-handling).
 
 #### Global
 Calling global functions is simple. The syntax is just the function name and arguments. I can be used in regular format or a chained pipe format.
@@ -647,11 +647,9 @@ See the examples in the functions that follow to see examples of Error handling.
 ### Template Functions
 (TODO: Sort these when done)
 
-#### .Eval(string|Expression|ResultSlice) (resultValue)
+#### .Eval(string|Expression) (resultValue)
 {: .func}
 Type: Context-Bound
-
-(TODO: Understand the Resultslice argument. I think it might be so that Eval can be passed as arguments to other eval (TODO: include an example of this))
 
 Executes the given expression and returns the first result that includes the tag key/value pairs of the alert instance. In other words, it evaluates the expression within the context of the alert. So if you have an alert that could trigger multiple incidents (i.e. `host=*`) then the expression will return data specific to the host for this alert.
 
@@ -843,12 +841,14 @@ Type: Context-Bound
 `.GraphLink` creates a link to Bosun's rule editor page. This is useful to provide a quick link to the view someone would use to edit the alert. This is generated using the [system configuration's Hostname](/system_configuration#hostname) value as the root of the link. The link will set the the alert, which template should be rendered, and time on the rule editor page. The time that represents "now" will be the time of the alert. The rule editor's alert will be set to point to the alert definition that corresponds to this alert. However, it will always be loading the current definitions, so it is possible that the alert or template definitions will have changed since the template was rendered. 
 
 
-#### .Graph(string|Expression|ResultSlice(TODO: Not sure this can take a result slice?)) (image)
+#### .Graph(string|Expression, unit string) (image)
 {: .func}
 
 Type: Context-Bound
 
 Creates a graph of the expression. It will error (That can not be handled) if the return type of the expression is not a `seriesSet`. If the expression is a an OpenTSDB query, it will be auto downsampled so that there are approx no more than 1000 points per series in the graph. Like `.Eval`, it filters the results to only those that include the tag key/value pairs of the alert instance. In other words, in the example, for an alert on `host=a` only the series for host a would be graphed.
+
+If the optional unit argument is provided it will be shown as a label on the y axis.
 
 When the rendered graph is viewed in Bosun's UI (either the config test UI, or the dashboard) than the Graph will be an SVG. For email notifications the graph is rendered into a PNG. This is because most email providers don't allow SVGs embedded in emails.
 
@@ -866,12 +866,18 @@ alert graph {
 
 template graph {
     body = `
-    {{.Graph .Alert.Vars.series }}
+    {{$v := .Graph .Alert.Vars.series "Random Numbers" }}
+    <!-- If $v is not nil (which is what .Graph returns on errors) -->
+    {{ if notNil $v }}
+        {{ $v }}
+    {{ else }}
+        {{ .LastError }}
+    {{ end }}
 `
 }
 ```
 
-#### .GraphAll(string|Expression|ResultSlice) (image)
+#### .GraphAll(string|Expression, unit string) (image)
 {: .func}
 
 Type: Context-Bound
