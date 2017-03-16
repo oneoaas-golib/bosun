@@ -34,7 +34,7 @@ An alert is defined with the following syntax:
 
 ```
 alert uniqueAlertName {
-    variable = value
+    $variable = value
     ...
     keyword = value
     ...
@@ -632,7 +632,7 @@ template context_bound_type_example {
 ### Template Error handling
 Templates can throw errors at runtime (i.e. when a notification is sent). Although the configuration check makes sure that templates are valid, you can still do things like try to dereference objects that are nil pointers.
 
-When a template fails to render, a generic notification will be emailed to the people that would have recieved the alert. (TODO: Look up what happens for non-email alerts in this case and explain it there.)
+When a template fails to render, a generic notification will be emailed to the people that would have recieved the alert. In the case of a post notification (where the subject is used). The following text will be posted `error: template rendering error for alert <alertkey>` where the alert key is something like `os.cpu{host=a}`.
 
 In order to prevent the template from completelying failing and resulting in the generic notification, errors can be handled inside the application. 
 
@@ -653,7 +653,7 @@ Type: Context-Bound
 
 Executes the given expression and returns the first result that includes the tag key/value pairs of the alert instance. In other words, it evaluates the expression within the context of the alert. So if you have an alert that could trigger multiple incidents (i.e. `host=*`) then the expression will return data specific to the host for this alert.
 
-If the expression results in an error nil will be returned and `.Errors` will be appended to. If the result set is empty, than `NaN` is returned. Otherwise the value of the first matching result in the set is returned. That result can be any type of value that Bosun can return (TODO: link to a document that shows the types that can be returned, and their structure as they appear to templates) since the type returned by Eval is dependent on what the return type of the expression it evaluates. Mostly commonly it will be float64 when used to evaluate an expression that is enclosed in a reduction like in the following example:
+If the expression results in an error nil will be returned and `.Errors` will be appended to. If the result set is empty, than `NaN` is returned. Otherwise the value of the first matching result in the set is returned. That result can be any type of value that Bosun can return since the type returned by Eval is dependent on what the return type of the expression it evaluates. Mostly commonly it will be float64 when used to evaluate an expression that is enclosed in a reduction like in the following example:
 
 ```
 alert eval {
@@ -1318,7 +1318,7 @@ A tagset is a map of of string to string (`map[string]string` in Go). The keys r
 
 The Value can be of different types. Technically, it is a go `interface{}` with two methods, `Type()` which returns the type of the `Value()` which returns an `interface{}` as well, but will be of the type returned by the `Type()` method.
 
-The most common case of dealing with Results in a ResultSlice is to use the `.EvalAll` func on an expression that would return a NumberSet. See the example under [EvalAll](/definitions#evalall)
+The most common case of dealing with Results in a ResultSlice is to use the `.EvalAll` func on an expression that would return a NumberSet. See the example under [EvalAll](/definitions#evalall).
 
 #### Status 
 {: .type}
@@ -1336,7 +1336,7 @@ The `Status` type is an integer that represents the current severity status of t
 
 ## Lookups 
 
-
+## Macros
 
 
 {% endraw %}
