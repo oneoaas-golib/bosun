@@ -1366,10 +1366,43 @@ The `Status` type is an integer that represents the current severity status of t
 
 ## Notifications
 
-## Lookups 
+## Lookup tables
+
+
+
 
 ## Macros
 
+Macros are sections that can define anything (including variables). It is not an error to reference an unknown variable in a macro. Other sections can reference the macro with `macro = name`. The macro's data will be expanded with the current variable definitions and inserted at that point in the section. Multiple macros may be thus referenced at any time. Macros may reference other macros. For example:
+
+```
+$default_time = "2m"
+
+macro m1 {
+	$w = 80
+	warnNotification = default
+}
+
+macro m2 {
+	macro = m1
+	$c = 90
+}
+
+alert os.high_cpu {
+	$q = avg(q("avg:rate:os.cpu{host=ny-nexpose01}", $default_time, ""))
+	macro = m2
+	warn = $q > $w
+	crit = $q >= $c
+}
+```
+
+Will yield a warn expression for the os.high_cpu alert:
+
+```
+avg(q("avg:rate:os.cpu{host=ny-nexpose01}", "2m", "")) > 80
+```
+
+and set `warnNotification = default` for that alert.
 
 {% endraw %}
 
