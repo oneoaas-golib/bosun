@@ -81,7 +81,7 @@ Multiple of global system configuration value `checkFrequency` at which to run t
 
 #### squelch
 {: .keyword}
-Squelch (TODO Link to squelch detail) is comma-separated list of `tagk=tagv` pairs. `tagv` is a regex. If the current tag group matches all values, the alert is squelched, and will not trigger as crit or warn. For example, `squelch = host=ny-web.*,tier=prod` will match any group that has at least that host and tier. Note that the group may have other tags assigned to it, but since all elements of the squelch list were met, it is considered a match. Multiple squelch lines may appear; a tag group matches if any of the squelch lines match.
+`squelch` is comma-separated list of `tagk=tagv` pairs. `tagv` is a regex. If the current tag group matches all values, the alert is squelched, and will not trigger as crit or warn. For example, `squelch = host=ny-web.*,tier=prod` will match any group that has at least that host and tier. Note that the group may have other tags assigned to it, but since all elements of the squelch list were met, it is considered a match. Multiple squelch lines may appear; a tag group matches if any of the squelch lines match.
 
 This can also be defined at the global of level of the configuration. 
 
@@ -89,7 +89,7 @@ When using squelch, alerts will be removed even if they are not with-in the scop
 
 #### unknown
 {: .keyword}
-unknown is the time at which to mark an incident unknown (TODO: Link to details of unknown) if it can not be evaluated. It defaults the system configuration global variable `checkFrequency`.
+`unknown` is the duration (i.e. `unknown = 5m` ) at which to mark an incident [unknown](/usage#severity-states) if it can not be evaluated. It defaults the system configuration global variable `checkFrequency`.
 
 #### ignoreUnknown
 {: .keyword}
@@ -131,15 +131,72 @@ Templates in Bosun are built on top of go's templating. The subject is rendered 
 
 Variable expansion is not performed on templates because `$` is used in the template language, but a `V()` function is provided instead. Email bodies are HTML, subjects are plaintext.
 
-Macros can not be used in templates, however, templates can reference subtemplates. (TODO: Example of this).
+Macros can not be used in templates, however, templates can reference subtemplates.
 
 Note that templates are rendered when the expression is evaluated and it is non-normal. This is to eliminate changes in what is presented in the template because the data has changed in the tsdb since the alert was triggered.
+
+### Template Inclusions
+Templates can include other templates that have been defined in the confiuration.
+
+```
+template include {
+    body = `<p>This gets included!</p>`
+}
+
+template includes {
+    body = `{{ template "include" . }}`
+}
+
+alert include {
+    template = includes
+    warn = 1
+}
+```
+
+### Template CSS
+HTML templates will "inline" css. Since email doesn't support `<style>` blocks, an inliner ([douceur](https://github.com/aymerick/douceur)) takes a style block, and process the HTML to include those style rules as style attributes. 
+
+Example:
+
+```
+template header {
+    body = `
+    <style>
+        td, th {
+            padding-right: 10px;
+        }
+    </style>
+`
+}
+
+template table {
+    body = `
+    {{ template "header" . }}
+    <table>
+        <tr>
+            <th>One</th>
+            <!-- Will be rendered as:
+            <th style="padding-right: 10px;">One</th> -->
+            <th>Two</th>
+        <tr>
+            <td>This will have</td>
+            <td>Styling applied when rendered</td>
+        </tr>
+    </table>
+    `
+}
+
+alert table {
+    template = table
+    warn = 1
+}
+```
 
 ### Template Keywords
 
 #### body
 {: .keyword}
-The message body. This is formated in HTML (TODO: Unless What? I think always currently, maybe I should link to issue)
+The message body. This is always formated as HTML.
 
 #### subject
 {: .keyword}
