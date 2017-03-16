@@ -1178,8 +1178,6 @@ Type: Context-Bound
 
 Type: Context-Bound
 
-(TODO: Document + Example, also does this use search or is it like lookup series?)
-
 #### notNil(value) (bool)
 {: .func}
 
@@ -1433,7 +1431,76 @@ The `Status` type is an integer that represents the current severity status of t
 ## Notifications
 
 ## Lookup tables
+Lookup tables are tables you create that store information about tags. They can be used in 3 main ways:
 
+ 1. To set different values (i.e. thresholds) in expressions for different tags in a response set
+ 2. To change the notification of an alert based on the tags in the response
+ 3. To associate information with tags that can be referenced from templates
+
+Lookup tables are named, then have entries based on Tags, and within each entry there are arbirary key / value pairs. To access the data in expressions either the [lookup](/expressions#lookuptable-string-key-string-numberset) or [lookupSeries](/expressions#lookupseriesseries-seriesset-table-string-key-string-numberset) expression functions are used.
+
+(TODO: Example showing multiple groups as well)
+
+
+
+Example:
+
+```
+notification uhura {
+    print = true
+}
+
+notification spock {
+    print = true
+}
+
+lookup exampleTable {
+    entry host=a {
+        threshold = 9
+        fish = Ohhh... a Red Snapper - Hmmm... Very Tasty
+        contact_crew = spock
+    }
+    # You took the Box! Lets see whats in the box! 
+    entry host=* {
+        threshold = 3
+        fish = Nothing! Absolutely Nothing! Stupid! You so Stupid!
+        contact_crew = uhura
+    }
+}
+
+alert exampleTable {
+    template = lookup
+    $series = merge(series("host=a", 0, 10), series("host=b", 0, 2))
+    $r = avg($series)
+    
+    # lookup depends on Bosun's index of datapoints to get possible tag values
+    $lk = $r > lookup("exampleTable", "threshold")
+    
+    # lookupSeries uses the series to get the possible tag values
+    $lks = $r > lookupSeries($series, "exampleTable", "threshold")
+    
+    warn = $lks
+    
+    # spock will be contacted for host a, uhura for all others
+    warnNotification = lookup("exampleTable", "contact_crew")
+}
+
+template lookup {
+    body = `
+        <h1>.Lookup</h1>
+        
+        <p>You Got a: {{ .Lookup "exampleTable" "fish" }}</p>
+        <!-- For host a this will render to "Ohhh... a Red Snapper - Hmmm... Very Tasty" -->
+        <!-- It is just a shorthand for {{.LookupAll "exampleTable" "fish" .Group }} -->
+        
+        <h2>.LookupAll</h2>
+        
+        <p>The fish for host "b" will always be {{ .LookupAll "exampleTable" "fish" "host=b" }}</p>
+        <!-- For host a this will render to "Nothing! Absolutely Nothing! Stupid! You so Stupid!"  
+        since we requested host=b specifically -->
+    `
+}
+```
 
 
 

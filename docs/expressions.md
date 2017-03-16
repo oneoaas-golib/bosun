@@ -693,11 +693,15 @@ Returns the first count (scalar) results of number.
 
 Returns the first key from the given lookup table with matching tags, this searches the built-in index and so only makes sense when using OpenTSDB and sending data to /index or relaying through bosun.
 
+Using the lookup function will set [unJoinedOk](/definitions#unjoinedok) to true for the alert.
+
 ## lookupSeries(series seriesSet, table string, key string) numberSet
 {: .exprFunc}
 
 Returns the first key from the given lookup table with matching tags.
 The first argument is a series to use from which to derive the tag information.  This is good for alternative storage backends such as graphite and influxdb.
+
+Using the lookupSeries function will set [unJoinedOk](/definitions#unjoinedok) to true for the alert.
 
 ## map(series seriesSet, subExpr numberSetExpr) seriesSet
 {: .exprFunc}
