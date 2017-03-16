@@ -135,6 +135,72 @@ Macros can not be used in templates, however, templates can reference subtemplat
 
 Note that templates are rendered when the expression is evaluated and it is non-normal. This is to eliminate changes in what is presented in the template because the data has changed in the tsdb since the alert was triggered.
 
+### The Unknown Template
+Since there is limited information for an alert that is unknown, and since unknowns can be grouped the unknown template is different. 
+
+The unknown template (set by the global option `unknownTemplate`) acts differently than alert templates. It receives groups of alerts since unknowns tend to happen in groups (i.e., a host stops reporting and all alerts for that host trigger unknown at the same time).
+
+Variables and function available to the unknown template:
+
+* Group: list of names of alerts
+* Name: group name
+* Time: [time](http://golang.org/pkg/time/#Time) this group triggered unknown
+
+Example:
+
+```
+template ut {
+    subject = {{.Name}}: {{.Group | len}} unknown alerts
+    body = `
+    <p>Time: {{.Time}}
+    <p>Name: {{.Name}}
+    <p>Alerts:
+    {{range .Group}}
+        <br>{{.}}
+    {{end}}`
+}
+
+unknownTemplate = ut
+```
+
+In general it is better to stick with the system default by not defining an unknown template. The system default is:
+
+Body: 
+
+```
+<p>Time: {{.Time}}
+<p>Name: {{.Name}}
+<p>Alerts:
+{{range .Group}}
+    <br>{{.}}
+{{end}}
+```
+
+Subject:
+
+```
+{{.Name}}: {{.Group | len}} unknown alerts
+```
+
+The template for grouped unknowns can not be changed and is hard coded into Bosun and has the following body:
+
+```
+<p>Threshold of {{ .Threshold }} reached for unknown notifications. The following unknown
+group emails were not sent.
+<ul>
+{{ range $group, $alertKeys := .Groups }}
+    <li>
+        {{ $group }}
+        <ul>
+            {{ range $ak := $alertKeys }}
+            <li>{{ $ak }}</li>
+            {{ end }}
+        <ul>
+    </li>
+{{ end }}
+</ul>
+```
+
 ### Template Inclusions
 Templates can include other templates that have been defined in the confiuration.
 
