@@ -207,10 +207,12 @@ Templates can include other templates that have been defined in the confiuration
 ```
 template include {
     body = `<p>This gets included!</p>`
+    subject = `This is the subject`
 }
 
 template includes {
     body = `{{ template "include" . }}`
+    subject = `This is the subject`
 }
 
 alert include {
@@ -233,6 +235,7 @@ template header {
         }
     </style>
 `
+    subject = `This is the subject`
 }
 
 template table {
@@ -250,6 +253,7 @@ template table {
         </tr>
     </table>
     `
+    subject = `This is the subject`
 }
 
 alert table {
@@ -429,6 +433,7 @@ template result {
         {{ .Result.Value }}
     {{ end }}
     `
+    subject = `This is the subject`
 }
 
 alert result {
@@ -498,6 +503,7 @@ Example:
 ```
 template text {
     body = `<pre>{{.Alert.Text}}</pre>`
+    subject = `This is the subject`
 }
 
 alert text {
@@ -529,6 +535,7 @@ template alert.vars {
         <!-- Workaround for Global vars -->
         {{.Alert.Vars.fakeGlobal }}
     `
+    subject = `This is the subject`
 }
 
 alert alert.vars {
@@ -556,8 +563,8 @@ template expr {
         <!-- note that an error from eval is not checked in this example, 
         see other examples for error checking -->
         Result: {{.Eval .Alert.Warn}}
-        
     `
+    subject = `This is the subject`
 }
 
 alert expr {
@@ -646,6 +653,7 @@ template test {
         {{ end }}
     </table>
     `
+    subject = `This is the subject`
 }
 ```
 
@@ -671,6 +679,7 @@ template global_type_example {
         <!-- Pipe Format -->
         {{ 12312313 | bytes }}
     `
+    subject = `This is the subject`
 }
 ```
 
@@ -692,6 +701,7 @@ template context_bound_type_example {
             {{ $.Eval $.Alert.Vars.avg_cpu }}
         {{ end }}
     `
+    subject = `This is the subject`
 }
 ```
 
@@ -739,6 +749,7 @@ template eval {
         {{ .LastError }}
     {{ end }}
 `
+    subject = `This is the subject`
 }
 ```
 
@@ -809,6 +820,7 @@ template evalall {
     {{ end }}
     
     `
+    subject = `This is the subject`
 }
 ```
 
@@ -881,7 +893,9 @@ template leftjoin {
         {{end}}
     {{ else }}
         Error Creating Table: {{ .LastError }}
-    {{end}}`
+    {{end}}
+    `
+    subject = `This is the subject`
 }
 ```
 
@@ -940,6 +954,7 @@ template graph {
         {{ .LastError }}
     {{ end }}
 `
+    subject = `This is the subject`
 }
 ```
 
@@ -1044,6 +1059,7 @@ template meta {
             {{ .LastError }}
         {{ end }}
     `
+    subject = `This is the subject`
 }
 ```
 
@@ -1061,6 +1077,7 @@ template httpget {
     body = `
     {{ .HTTPGet "http://localhost:9090"}}
     `
+    subject = `This is the subject`
 }
 
 alert httpget {
@@ -1090,6 +1107,7 @@ template httppost {
     body = `
     {{ .HTTPPost "http://localhost:9090" "application/json" "{ \"Foo\": \"bar\" }" }}
     `
+    subject = `This is the subject`
 }
 
 alert httppost {
@@ -1128,6 +1146,7 @@ template esquery {
             <p>{{ .LastError }}
         {{end}}
     `
+    subject = `This is the subject`
 }
 
 alert esquery {
@@ -1201,6 +1220,7 @@ template bytes {
         {{ .Alert.Vars.ten | bytes }},{{ .Alert.Vars.two | bytes }}
         <!-- results are 97.66KB,1000.00KB -->
     `
+    subject = `This is the subject`
 }
 
 alert bytes {
@@ -1227,6 +1247,7 @@ template pct {
     {{ .Eval .Alert.Vars.value | pct }}
     <!-- result is: 55.56% -->
     `
+    subject = `This is the subject`
 }
 
 alert pct {
@@ -1253,6 +1274,7 @@ template replace {
     {{ replace "Foo.Bar.Baz" "." " " -1 }}
     <!-- result is: Foo Bar Baz -->
     `
+    subject = `This is the subject`
 }
 
 alert replace {
@@ -1281,6 +1303,7 @@ Example:
 template htmlFunc {
     body = `All our templates always show the notes: <!-- the following will be rendered as subscript -->
     {{ .Alert.Vars.notes | html }}`
+    subject = `This is the subject`
 }
 
 alert htmlFunc {
@@ -1306,6 +1329,7 @@ template parseDuration {
         Doomsday: {{ .Start.Add (parseDuration (.Eval .Alert.Vars.secondsUntilDoom | printf "%fs"))}}
         <!-- result is: Doomsday: 2021-02-11 15:11:06.727332631 +0000 UTC -->
     `
+    subject = `This is the subject`
 }
 
 alert parseDuration {
@@ -1336,8 +1360,8 @@ template globalvar {
     <!-- renders an empty string -->
     <p>{{ V "$overRide" }}</p>
     <!-- render to "I shall be seen" since expression variable overrides do *not* work in templates -->
-    
 `
+    subject = `This is the subject`
 }
 
 alert globalvar {
@@ -1439,6 +1463,8 @@ Lookup tables are tables you create that store information about tags. They can 
 
 Lookup tables are named, then have entries based on Tags, and within each entry there are arbirary key / value pairs. To access the data in expressions either the [lookup](/expressions#lookuptable-string-key-string-numberset) or [lookupSeries](/expressions#lookupseriesseries-seriesset-table-string-key-string-numberset) expression functions are used.
 
+When using notification lookups, the "lookup" function is actually different from the expression lookup function behind the scenes. Users using `lookupSeries` should still use `lookup` when defining notification lookups.
+
 (TODO: Example showing multiple groups as well)
 
 
@@ -1499,6 +1525,7 @@ template lookup {
         <!-- For host a this will render to "Nothing! Absolutely Nothing! Stupid! You so Stupid!"  
         since we requested host=b specifically -->
     `
+    subject = `This is the subject`
 }
 ```
 
